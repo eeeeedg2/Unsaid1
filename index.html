@@ -183,7 +183,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ---------- state ---------- */
-let session = null, profile = null, view = { name: "library", tab: "video" }, videos = [];
+let session = null, profile = null, view = { name: "library", tab: "video" }, videos = [], firstLoad = true;
 
 /* ---------- the script ---------- */
 const SCRIPT = [
@@ -383,29 +383,42 @@ async function renderLibrary() {
     profiles: byId[v.owner] || null,
     video_likes: [{ count: likeCount[v.id] || 0 }]
   }));
+  const counts = {
+    video: videos.filter(v => v.kind === "video").length,
+    short: videos.filter(v => v.kind === "short").length
+  };
+
+  // on first load, open whichever tab actually has something in it
+  if (firstLoad) {
+    firstLoad = false;
+    const alt = view.tab === "video" ? "short" : "video";
+    if (!counts[view.tab] && counts[alt]) view.tab = alt;
+  }
+
+  const otherTab = view.tab === "video" ? "short" : "video";
+  const other = counts[otherTab];
   const list = videos.filter(v => v.kind === view.tab);
 
   root.innerHTML = `<div class="wrap">
     <div class="tabs">
       <h2>UNSAID</h2>
-      <button class="tab ${view.tab === "video" ? "on" : ""}" data-k="video">videos</button>
-      <button class="tab ${view.tab === "short" ? "on" : ""}" data-k="short">shorts</button>
+      <button class="tab ${view.tab === "video" ? "on" : ""}" data-k="video">videos ${counts.video}</button>
+      <button class="tab ${view.tab === "short" ? "on" : ""}" data-k="short">shorts ${counts.short}</button>
       <span class="right"><button class="ghost" id="up">+ upload</button></span>
     </div>
     ${list.length === 0 ? `<div class="empty">
         <div class="k disp">${other > 0 ? `Nothing in ${view.tab === "short" ? "Shorts" : "Videos"} yet.` : "Nothing here yet."}</div>
         <p>${other > 0
-            ? `There ${other === 1 ? "is 1" : `are ${other}`} over in ${view.tab === "short" ? "Videos" : "Shorts"}. Anything taller than it is wide is filed as a Short.`
+            ? `There ${other === 1 ? "is 1" : `are ${other}`} over in ${otherTab === "short" ? "Shorts" : "Videos"}. Anything taller than it is wide is filed as a Short.`
             : view.tab === "short" ? "Shorts are anything taller than it is wide." : "The first one sets the tone."}</p>
-        ${other > 0
-          ? `<button class="btn" id="swap">Go to ${view.tab === "short" ? "Videos" : "Shorts"}</button>`
-          : `<button class="btn" id="up2">Upload ${view.tab === "short" ? "a Short" : "a video"}</button>`}
+        ${other > 0 ? `<button class="btn" id="swap">Go to ${otherTab === "short" ? "Shorts" : "Videos"}</button>` : ""}
+        <button class="${other > 0 ? "ghost" : "btn"}" id="up2" ${other > 0 ? 'style="margin-left:10px"' : ""}>Upload ${view.tab === "short" ? "a Short" : "a video"}</button>
       </div>`
       : `<div class="grid ${view.tab === "short" ? "shorts" : ""}">${list.map(cardHTML).join("")}</div>`}
   </div>`;
 
   const swap = root.querySelector("#swap");
-  if (swap) swap.onclick = () => { view.tab = view.tab === "short" ? "video" : "short"; renderLibrary(); };
+  if (swap) swap.onclick = () => { view.tab = otherTab; renderLibrary(); };
 
   root.querySelectorAll(".tab").forEach(b => b.onclick = () => { view.tab = b.dataset.k; renderLibrary(); });
   root.querySelectorAll("#up,#up2").forEach(b => b && (b.onclick = renderUpload));
