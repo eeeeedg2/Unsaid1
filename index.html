@@ -523,6 +523,21 @@ function probe(file) {
 
 /* ---------- watch ---------- */
 async function renderWatch(id) {
+  try {
+    await renderWatchInner(id);
+  } catch (e) {
+    root.innerHTML = `<div class="wrap"><div class="empty">
+      <div class="k disp">Couldn't open that video.</div>
+      <p>${esc(e && (e.message || e.error_description) || String(e))}</p>
+      <button class="btn" id="bk">← all videos</button>
+    </div></div>`;
+    const b = root.querySelector("#bk");
+    if (b) b.onclick = renderLibrary;
+  }
+}
+
+async function renderWatchInner(id) {
+  if (!session || !session.user) return boot();
   view = { name: "watch", id, tab: view.tab };
   root.innerHTML = `<div class="wrap"><div class="loading">LOADING</div></div>`;
 
