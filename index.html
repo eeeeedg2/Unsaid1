@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box}
-:root{--paper:#EDEBE3;--ink:#16181B;--blue:#2B3A8F;--red:#F1483B;--dim:#7A7A70;--line:rgba(22,24,27,.14);--wash:#E3E0D6}
+:root{--paper:#EDEBE3;--ink:#16181B;--blue:#2B3A8F;--red:#F1483B;--green:#1F6F5C;--dim:#7A7A70;--line:rgba(22,24,27,.14);--wash:#E3E0D6}
 html,body{margin:0}
 body{background:var(--paper);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .mono{font-family:'Space Mono',ui-monospace,monospace}
@@ -135,6 +135,12 @@ h1.vt{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:cla
 .like.on .pip{background:var(--red);transform:rotate(45deg)}
 @media(prefers-reduced-motion:reduce){.like .pip{transition:none}}
 
+.meter{margin-top:10px}
+.meter>i{display:block;height:6px;background:var(--red,#F1483B);width:0;min-width:2px;border:1.5px solid var(--ink);transition:width .18s ease}
+.meter>span{display:block;margin-top:7px;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.04em;color:var(--dim,#7A7A70)}
+.meter.ok>i{background:var(--green,#1F6F5C)}
+.meter.ok>span{color:var(--green,#1F6F5C)}
+@media(prefers-reduced-motion:reduce){.meter>i{transition:none}}
 .bar{height:6px;background:var(--wash);border:1.5px solid var(--ink);margin-top:10px}
 .bar i{display:block;height:100%;background:var(--blue);width:0}
 footer{border-top:1.5px solid var(--ink);margin-top:40px;padding:20px 22px 40px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim);max-width:1180px;margin-left:auto;margin-right:auto;line-height:1.8}
