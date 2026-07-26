@@ -238,6 +238,14 @@ function overlap(a, b) {
   let n = 0; A.forEach(w => B.has(w) && n++);
   return n / Math.min(A.size, B.size);
 }
+// how much the uploader has told the gate. The gate uses the same count:
+// under DETAIL_MIN distinct words it can't judge specificity and runs loose.
+const DETAIL_MIN = 8;
+function describedness(title, synopsis, momentsRaw) {
+  const text = [title, synopsis, momentsRaw].filter(Boolean).join(" ").toLowerCase();
+  return new Set(text.replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length > 2)).size;
+}
+
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ago = ts => { const s = (Date.now() - new Date(ts)) / 1000 | 0; if (s < 60) return "just now"; if (s < 3600) return (s / 60 | 0) + "m ago"; if (s < 86400) return (s / 3600 | 0) + "h ago"; return (s / 86400 | 0) + "d ago"; };
@@ -445,8 +453,9 @@ function renderUpload() {
     <div class="hint" id="probe" style="margin-top:8px"></div>
     <label class="lab" for="ti">Title</label>
     <input class="in" id="ti" maxlength="140">
-    <label class="lab" for="sy">What's in it — the gate reads this to judge whether a comment is about it</label>
-    <textarea class="in" id="sy" rows="3"></textarea>
+    <label class="lab" for="sy">What's in it — required</label>
+    <textarea class="in" id="sy" rows="4" placeholder="What actually happens. Name things a viewer could react to — this is the only thing the gate can check a comment against."></textarea>
+    <div class="meter" id="detail"><i></i><span></span></div>
     <label class="lab" for="mo">Moments, one per line, as "2:31 what happens" (optional)</label>
     <textarea class="in" id="mo" rows="3"></textarea>
     <div class="bar hide" id="bar"><i></i></div>
@@ -461,19 +470,39 @@ function renderUpload() {
   let meta = null;
   $("#cancel").onclick = renderLibrary;
 
+  function refresh() {
+    const n = describedness($("#ti").value, $("#sy").value, $("#mo").value);
+    const pct = Math.min(100, Math.round((n / DETAIL_MIN) * 100));
+    const bar = $("#detail").firstElementChild;
+    const txt = $("#detail").lastElementChild;
+    bar.style.width = pct + "%";
+    $("#detail").classList.toggle("ok", n >= DETAIL_MIN);
+    txt.textContent = n >= DETAIL_MIN
+      ? "enough for the gate to hold comments to this video"
+      : `${n} of ${DETAIL_MIN} distinct words — below this the gate can't tell a specific comment from a generic one`;
+    $("#go").disabled = !(meta && $("#ti").value.trim() && n >= DETAIL_MIN);
+  }
+  ["#ti", "#sy", "#mo"].forEach(sel => $(sel).addEventListener("input", refresh));
+  refresh();
+
   $("#file").onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
     $("#probe").className = "hint"; $("#probe").textContent = "reading…";
     try {
       meta = await probe(f);
       $("#probe").textContent = `${meta.w}×${meta.h} · ${Math.round(meta.seconds)}s · ${(f.size / 1048576).toFixed(1)}MB · filed as ${meta.kind === "short" ? "a Short" : "a video"}`;
-      $("#go").disabled = false;
+      refresh();
     } catch { $("#probe").className = "hint warn"; $("#probe").textContent = "That file couldn't be read as video."; }
   };
 
   $("#go").onclick = async () => {
     const file = $("#file").files[0], title = $("#ti").value.trim();
     if (!file || !title) { $("#err").className = "hint warn"; $("#err").textContent = "A file and a title are both required."; return; }
+    if (describedness(title, $("#sy").value, $("#mo").value) < DETAIL_MIN) {
+      $("#err").className = "hint warn";
+      $("#err").textContent = "Describe what's in the video first — the gate has nothing to check comments against otherwise.";
+      return;
+    }
     $("#go").disabled = true; $("#bar").classList.remove("hide"); $("#bar").firstElementChild.style.width = "12%";
     try {
       const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
