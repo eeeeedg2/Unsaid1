@@ -160,7 +160,9 @@ footer b{color:var(--ink);font-weight:400}
 
 <footer>
   <b>Likes and views are counted. Ranking isn't.</b> Threads open shuffled and nothing gets pinned, so a high count never buys a comment the top slot that gets it copied.<br>
-  Comments must be typed in the box. Pasted text is refused — that's the only check for machine writing that actually works, so detection alone isn't relied on.
+  Comments must be typed in the box. Pasted text is refused — that's the only check for machine writing that actually works, so detection alone isn't relied on.<br>
+  The last check sends your comment and the video's description to Google's Gemini API. On its free tier, Google may use that text to improve their models.
+  <span id="contactline"></span>
 </footer>
 
 <script type="module">
@@ -171,6 +173,10 @@ footer b{color:var(--ink);font-weight:400}
    ============================================================ */
 const SUPABASE_URL = "https://djuiybguorjxyxnwntct.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_gU7gtSybrHR7IvrHaJN3EQ_ixO49Z9f";
+
+// Where reports and takedown requests reach you. Leave blank and the report
+// links stay hidden — but then nobody can tell you about a video you'd want gone.
+const CONTACT_EMAIL = "u9579975@gmail.com";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -187,6 +193,11 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+if (CONTACT_EMAIL) {
+  document.getElementById("contactline").innerHTML =
+    `<br>Something here that shouldn't be? Write to <a href="mailto:${CONTACT_EMAIL}?subject=UNSAID%20report">${CONTACT_EMAIL}</a> and it comes down.`;
+}
 
 /* ---------- state ---------- */
 let session = null, profile = null, view = { name: "library", tab: "video" }, videos = [], firstLoad = true;
@@ -295,7 +306,9 @@ function renderSignIn() {
     <div class="rules">
       <div class="rule"><span class="n">01</span><span class="x">Say something about this video, not about videos in general.</span></div>
       <div class="rule"><span class="n">02</span><span class="x">Type it here. Pasted text is refused — it's the only check for machine writing that actually works.</span></div>
-      <div class="rule"><span class="n">03</span><span class="x">If it's already been said in the thread, add to it or argue with it.</span></div>
+      <div class="rule"><span class="n">03</span><span class="x">If it's already been said in the thread, add to it or argue with it.</span>
+      </div>
+      <div class="rule"><span class="n">04</span><span class="x">The last check is done by Google's Gemini, so your comment text is sent there.</span></div>
     </div>
     <div class="signins">
       <button class="gbtn dark" id="github">
@@ -631,6 +644,9 @@ async function renderWatchInner(id) {
         <span>${shownViews} view${shownViews === 1 ? "" : "s"}</span>
         <button class="like ${iLike ? "on" : ""}" id="vlike"><span class="pip"></span>${vLikes.length}</button>
         ${v.owner === session.user.id ? `<button class="ghost" id="vdel">delete</button>` : ""}
+        ${CONTACT_EMAIL && v.owner !== session.user.id
+          ? `<a class="ghost" style="text-decoration:none" href="mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("UNSAID report: " + v.title)}&body=${encodeURIComponent("Video id: " + v.id + "\nChannel: " + (v.profiles?.channel || "unknown") + "\n\nWhat's wrong with it:\n")}">report</a>`
+          : ""}
       </div>
       ${v.synopsis ? `<p class="syn">${esc(v.synopsis)}</p>` : ""}
       ${(v.moments || []).length ? `<div class="momlist">${v.moments.map(m =>
