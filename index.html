@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UNSAID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{--paper:#EDEBE3;--ink:#16181B;--blue:#2B3A8F;--red:#F1483B;--dim:#7A7A70;--line:rgba(22,24,27,.14);--wash:#E3E0D6}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:'Space Mono',ui-monospace,monospace}
+.disp{font-family:'Bricolage Grotesque','Helvetica Neue',sans-serif}
+button{font:inherit}
+a{color:var(--blue)}
+.hide{display:none !important}
+
+header{border-bottom:1.5px solid var(--ink);padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.mark{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;letter-spacing:-.04em;background:none;border:0;padding:0;cursor:pointer;color:inherit}
+.mark span{color:var(--red)}
+.tagline{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.headright{margin-left:auto;display:flex;gap:12px;align-items:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--dim)}
+.headright b{color:var(--ink)}
+.pfp{width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;object-fit:cover}
+
+.wrap{max-width:1180px;margin:0 auto;padding:26px 22px 60px}
+.two{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
+@media(max-width:900px){.two{grid-template-columns:1fr;gap:34px}.wrap{padding:18px 16px 50px}}
+
+.btn{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:14px;background:var(--ink);color:var(--paper);border:0;padding:11px 20px;cursor:pointer}
+.btn:disabled{background:#B8B6AC;cursor:not-allowed}
+.btn:focus-visible,.ghost:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.ghost{background:none;border:1.5px solid var(--line);color:var(--dim);font-family:'Space Mono',monospace;font-size:11px;padding:7px 11px;cursor:pointer}
+.ghost:hover{border-color:var(--ink);color:var(--ink)}
+.ghost.on{border-color:var(--ink);color:var(--ink);background:var(--wash)}
+
+.gbtn{display:inline-flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--ink);padding:12px 20px;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:15px;color:var(--ink)}
+.gbtn:hover{box-shadow:3px 3px 0 var(--ink)}
+.gbtn svg{width:19px;height:19px;flex:none}
+.gbtn.dark{background:var(--ink);color:var(--paper)}
+.gbtn.dark:hover{box-shadow:3px 3px 0 var(--red)}
+.signins{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+
+.in{width:100%;border:1.5px solid var(--line);background:#F5F3ED;padding:11px 12px;font-family:'Newsreader',serif;font-size:16px;color:var(--ink)}
+.in:focus{outline:0;border-color:var(--blue)}
+.lab{display:block;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:16px 0 6px}
+.hint{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim);letter-spacing:.04em}
+.hint.warn{color:var(--red)}
+
+.panel{max-width:540px;margin:8vh auto;padding:0 22px}
+.panel h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(30px,6vw,44px);letter-spacing:-.04em;line-height:1.02;margin:0 0 14px}
+.panel p{max-width:46ch;color:#33363B}
+.rules{margin:22px 0 26px;border-top:1.5px solid var(--ink)}
+.rule{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.rule .n{font-family:'Space Mono',monospace;font-size:11px;color:var(--red);min-width:22px}
+.rule .x{max-width:44ch}
+
+.tabs{display:flex;gap:8px;border-bottom:1.5px solid var(--ink);padding-bottom:10px;margin-bottom:4px;align-items:baseline;flex-wrap:wrap}
+.tabs h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:19px;letter-spacing:-.02em;margin:0 12px 0 0}
+.tab{background:none;border:0;border-bottom:2px solid transparent;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.06em;color:var(--dim);cursor:pointer;padding:3px 2px}
+.tab.on{color:var(--ink);border-bottom-color:var(--red)}
+.tabs .right{margin-left:auto}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:22px;margin-top:22px}
+.grid.shorts{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.card{background:none;border:0;padding:0;text-align:left;cursor:pointer;color:inherit}
+.card .th{width:100%;aspect-ratio:16/9;border:1.5px solid var(--ink);background:var(--wash) center/cover no-repeat;display:block}
+.grid.shorts .card .th{aspect-ratio:9/16}
+.card .ti{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:15.5px;letter-spacing:-.02em;line-height:1.2;margin-top:9px}
+.card .me{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim);margin-top:6px;letter-spacing:.04em}
+.card:focus-visible .th{outline:2px solid var(--blue);outline-offset:2px}
+
+.empty{border:1.5px dashed var(--line);padding:34px 24px;text-align:center;margin-top:22px}
+.empty .k{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em}
+.empty p{color:var(--dim);max-width:38ch;margin:8px auto 18px}
+
+.stage{border:1.5px solid var(--ink);background:#000;position:relative;overflow:hidden}
+.stage video{width:100%;display:block;max-height:72vh;background:#000}
+.stage.short{max-width:420px;margin:0 auto}
+h1.vt{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(22px,3.1vw,31px);line-height:1.08;letter-spacing:-.035em;margin:18px 0 8px}
+.vmeta{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.syn{margin:14px 0 0;max-width:52ch;color:#33363B;white-space:pre-wrap}
+.momlist{margin-top:22px;border-top:1px solid var(--line)}
+.mom{display:flex;gap:14px;width:100%;text-align:left;padding:11px 2px;background:none;border:0;border-bottom:1px solid var(--line);cursor:pointer;color:inherit;align-items:baseline}
+.mom:hover{background:rgba(43,58,143,.05)}
+.mom.on{background:rgba(241,72,59,.08)}
+.mom .t{font-family:'Space Mono',monospace;font-size:12px;color:var(--blue);min-width:52px}
+.mom.on .t{color:var(--red);font-weight:700}
+
+.gate{border:1.5px solid var(--ink);background:#F5F3ED}
+.gatehead{padding:12px 16px;border-bottom:1.5px solid var(--ink);display:flex;align-items:center;gap:10px}
+.gatehead .k{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.gatehead .dot{width:7px;height:7px;background:var(--red);border-radius:50%;flex:none}
+.anchorbar{padding:9px 16px;border-bottom:1px solid var(--line);font-family:'Space Mono',monospace;font-size:11px;color:var(--blue);display:flex;gap:10px;align-items:center}
+.anchorbar button{margin-left:auto;background:none;border:0;color:var(--dim);cursor:pointer;text-decoration:underline;font-size:11px;font-family:inherit}
+#draft{width:100%;border:0;background:transparent;padding:16px;font-family:'Newsreader',serif;font-size:17.5px;line-height:1.5;resize:vertical;min-height:130px;color:var(--ink)}
+#draft:focus{outline:0;box-shadow:inset 0 0 0 2px var(--blue)}
+#draft::placeholder{color:#A3A298}
+.gbar{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1.5px solid var(--ink);flex-wrap:wrap}
+.checks{border-top:1px solid var(--line);padding:12px 16px;display:grid;gap:7px}
+.check{display:flex;gap:10px;align-items:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--dim)}
+.check .box{width:11px;height:11px;border:1.5px solid currentColor;flex:none}
+.check.run{color:var(--blue)}.check.run .box{animation:pulse .8s infinite alternate}
+.check.ok{color:var(--ink)}.check.ok .box{background:var(--ink)}
+.check.bad{color:var(--red)}.check.bad .box{background:var(--red)}
+@keyframes pulse{from{opacity:.25}to{opacity:1}}
+
+.returned{position:relative;border:1.5px solid var(--red);background:#F5F3ED;padding:18px;margin-top:16px;overflow:hidden}
+.stamp{position:absolute;top:10px;right:-6px;transform:rotate(-9deg);font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:27px;letter-spacing:-.03em;color:var(--red);border:3px solid var(--red);padding:2px 12px;opacity:.9;animation:slam .28s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes slam{from{transform:rotate(-9deg) scale(2.4);opacity:0}to{transform:rotate(-9deg) scale(1);opacity:.9}}
+@media(prefers-reduced-motion:reduce){.stamp{animation:none}.check.run .box{animation:none}}
+.returned .why{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);max-width:68%}
+.returned .body{margin-top:9px;max-width:44ch;font-size:16.5px}
+.returned .quoted{margin-top:12px;padding-left:12px;border-left:3px solid var(--red);font-style:italic;color:#4A4C50;font-size:15px}
+.returned .tells{margin-top:12px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim)}
+.posted{border:1.5px solid var(--blue);background:rgba(43,58,143,.06);padding:14px 16px;margin-top:16px;font-family:'Space Mono',monospace;font-size:11px;color:var(--blue)}
+
+.thread{margin-top:36px}
+.threadhead{display:flex;align-items:baseline;gap:12px;border-bottom:1.5px solid var(--ink);padding-bottom:8px}
+.threadhead h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em;margin:0}
+.sortnote{font-family:'Space Mono',monospace;font-size:10px;color:var(--dim);padding-top:8px}
+.c{padding:18px 0;border-bottom:1px solid var(--line)}
+.c .who{font-family:'Space Mono',monospace;font-size:11px;color:var(--dim);display:flex;gap:10px;align-items:center}
+.c .who .me{color:var(--red)}
+.c .who .del{margin-left:auto;background:none;border:0;color:var(--dim);cursor:pointer;text-decoration:underline;font-family:inherit;font-size:11px}
+.c p{margin:7px 0 0;max-width:56ch;white-space:pre-wrap}
+.c .prov{margin-top:10px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.like{display:inline-flex;align-items:center;gap:7px;font:inherit;letter-spacing:.08em;text-transform:uppercase;background:none;border:1.5px solid var(--line);color:var(--dim);padding:4px 9px;cursor:pointer}
+.like .pip{width:8px;height:8px;border:1.5px solid currentColor;flex:none;transition:transform .12s ease}
+.like:hover{border-color:var(--ink);color:var(--ink)}
+.like.on{border-color:var(--red);color:var(--red)}
+.like.on .pip{background:var(--red);transform:rotate(45deg)}
+@media(prefers-reduced-motion:reduce){.like .pip{transition:none}}
+
+.bar{height:6px;background:var(--wash);border:1.5px solid var(--ink);margin-top:10px}
+.bar i{display:block;height:100%;background:var(--blue);width:0}
+footer{border-top:1.5px solid var(--ink);margin-top:40px;padding:20px 22px 40px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim);max-width:1180px;margin-left:auto;margin-right:auto;line-height:1.8}
+footer b{color:var(--ink);font-weight:400}
+.loading{padding:60px 22px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.1em}
+</style>
+</head>
+<body>
+
+<header id="head" class="hide">
+  <button class="mark" id="home">UN<span>SAID</span></button>
+  <span class="tagline">Say the thing that isn't here yet</span>
+  <div class="headright" id="headright"></div>
+</header>
+
+<div id="root"><div class="loading">LOADING</div></div>
+
+<footer>
+  <b>Likes and views are counted. Ranking isn't.</b> Threads open shuffled and nothing gets pinned, so a high count never buys a comment the top slot that gets it copied.<br>
+  Comments must be typed in the box. Pasted text is refused — that's the only check for machine writing that actually works, so detection alone isn't relied on.
+</footer>
+
+<script type="module">
+/* ============================================================
+   CONFIG — fill these in from your Supabase project settings.
+   Settings → API → Project URL and anon/public key.
+   The anon key is safe in public; row-level security guards the data.
+   ============================================================ */
+const SUPABASE_URL = "https://djuiybguorjxyxnwntct.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_gU7gtSybrHR7IvrHaJN3EQ_ixO49Z9f";
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const root = document.getElementById("root");
+const head = document.getElementById("head");
+const headright = document.getElementById("headright");
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  root.innerHTML = `<div class="panel">
+    <h1>Not connected yet.</h1>
+    <p>Open <code>index.html</code> and fill in <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> at the top of the script tag. SETUP.md has the ten-minute version of how to get them.</p>
+  </div>`;
+  throw new Error("unconfigured");
+}
+
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------- state ---------- */
+let session = null, profile = null, view = { name: "library", tab: "video" }, videos = [];
+
+/* ---------- the script ---------- */
+const SCRIPT = [
+  [/^\s*(first|1st|second|2nd|third|3rd)[\s!.?]*$/i, "First. / Second."],
+  [/\bpin (please|me)\b|\bplease pin\b|\bcan i get pinned\b/i, "Pin please."],
+  [/\blike so (the )?(creator|he|she|they) can see\b/i, "Like so the creator can see."],
+  [/\bwho'?s (watching|here|listening) in\b/i, "Who's watching in…"],
+  [/\bonly (real|true|og) fans\b/i, "Only real fans…"],
+  [/\bcan we (just )?appreciate\b|\bcan we talk about how\b/i, "Can we appreciate…"],
+  [/\b(bro|man|he|she|they) woke up and chose\b/i, "Bro woke up and chose…"],
+  [/^\s*the fact that\b/i, "The fact that…"],
+  [/\bi'?m (so )?(early|late)\b|\bneither early nor late\b/i, "I'm early. / I'm late."],
+  [/\bedit[:\s]*(omg |thanks|thank you|wow)/i, "Edit: thanks for the likes."],
+  [/\bmom,? i'?m famous\b/i, "Mom I'm famous."],
+  [/\bleaving this here so\b/i, "Leaving this here so people can like it later."],
+  [/^\s*(nobody|no one)\s*:\s*$/i, "Nobody:"],
+  [/\balgorithm brought me here\b/i, "The algorithm brought me here."],
+  [/\bthis (aged|hits) (like|different)\b/i, "This aged like…"],
+];
+
+const TELLS = [
+  [/\b(delve|delves|delving)\b/i, "delve"],
+  [/\b(tapestry|landscape of|realm of)\b/i, "abstract-noun opener"],
+  [/\b(multifaceted|holistic|robust|leverage|underscore[sd]?)\b/i, "corporate register"],
+  [/\bit'?s (not|isn'?t) (just|merely|only) .{3,60}?[,—-] it'?s\b/i, "not just X, it's Y"],
+  [/\b(furthermore|moreover|in conclusion|it'?s worth noting|ultimately,)\b/i, "essay connective"],
+  [/\b(a testament to|speaks volumes|serves as a reminder)\b/i, "closing flourish"],
+  [/\b(as an ai|i don'?t have personal|language model)\b/i, "assistant leak"],
+  [/\b(dive into|unpack|shed light on)\b/i, "explainer verb"],
+];
+
+function localTells(t) {
+  const found = TELLS.filter(([rx]) => rx.test(t)).map(([, n]) => n);
+  const sents = t.split(/[.!?]+/).map(s => s.trim()).filter(s => s.split(/\s+/).length > 1);
+  if (sents.length >= 4) {
+    const lens = sents.map(s => s.split(/\s+/).length);
+    const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
+    const sd = Math.sqrt(lens.reduce((a, b) => a + (b - mean) ** 2, 0) / lens.length);
+    if (sd < 2.6) found.push("every sentence the same length");
+  }
+  const words = t.trim().split(/\s+/).length;
+  if (words > 60 && !/\b\w+'\w+\b/.test(t)) found.push("no contractions at length");
+  if ((t.match(/—/g) || []).length >= 3) found.push("em-dash cadence");
+  return [...new Set(found)];
+}
+
+const STOP = new Set("a an and the is are was were be of to in on at for with from by it its this that these those i im you your he she they we us our my me not no so just very really about as but or if then than there here what who how why when which do does did get got go make like love more most all any some can could would should will".split(" "));
+const toks = s => s.toLowerCase().replace(/[^a-z0-9\s']/g, " ").split(/\s+/).filter(w => w.length > 2 && !STOP.has(w));
+function overlap(a, b) {
+  const A = new Set(toks(a)), B = new Set(toks(b));
+  if (!A.size || !B.size) return 0;
+  let n = 0; A.forEach(w => B.has(w) && n++);
+  return n / Math.min(A.size, B.size);
+}
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ago = ts => { const s = (Date.now() - new Date(ts)) / 1000 | 0; if (s < 60) return "just now"; if (s < 3600) return (s / 60 | 0) + "m ago"; if (s < 86400) return (s / 3600 | 0) + "h ago"; return (s / 86400 | 0) + "d ago"; };
+const pub = (bucket, path) => path ? sb.storage.from(bucket).getPublicUrl(path).data.publicUrl : "";
+
+/* ---------- boot ---------- */
+const { data: { session: s0 } } = await sb.auth.getSession();
+session = s0;
+sb.auth.onAuthStateChange((_e, s) => { session = s; boot(); });
+boot();
+
+async function boot() {
+  if (!session) { head.classList.add("hide"); return renderSignIn(); }
+  const { data } = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
+  profile = data;
+  head.classList.remove("hide");
+  renderHead();
+  if (!profile) return renderChannelSetup();
+  if (view.name === "watch") return renderWatch(view.id);
+  renderLibrary();
+}
+
+function renderHead() {
+  if (!profile) { headright.innerHTML = ""; return; }
+  headright.innerHTML =
+    `<button class="ghost" id="uploadbtn">upload</button>
+     <span><b>${esc(profile.channel)}</b></span>
+     ${profile.avatar_url ? `<img class="pfp" src="${esc(profile.avatar_url)}" alt="">` : ""}
+     <button class="ghost" id="signout">sign out</button>`;
+  headright.querySelector("#uploadbtn").onclick = renderUpload;
+  headright.querySelector("#signout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+}
+document.getElementById("home").onclick = () => { view = { name: "library", tab: view.tab || "video" }; renderLibrary(); };
+
+/* ---------- sign in ---------- */
+function renderSignIn() {
+  root.innerHTML = `<div class="panel">
+    <div class="mark disp" style="font-size:30px;margin-bottom:22px">UN<span>SAID</span></div>
+    <h1>A comment has to be about the video you just watched.</h1>
+    <p>Videos and Shorts, likes and views, all counted for real. What's different is the comment box: it refuses recycled phrases, refuses text that was written somewhere else and pasted in, and refuses anything that could sit under any other video.</p>
+    <div class="rules">
+      <div class="rule"><span class="n">01</span><span class="x">Say something about this video, not about videos in general.</span></div>
+      <div class="rule"><span class="n">02</span><span class="x">Type it here. Pasted text is refused — it's the only check for machine writing that actually works.</span></div>
+      <div class="rule"><span class="n">03</span><span class="x">If it's already been said in the thread, add to it or argue with it.</span></div>
+    </div>
+    <div class="signins">
+      <button class="gbtn dark" id="github">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        Continue with GitHub
+      </button>
+      <button class="gbtn hide" id="google">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.7-.4-4H24v7.5h12c-.2 2-1.5 5-4.4 7l6.7 5.2C42.2 36 45 30.6 45 24z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.4c-1.9 1.3-4.4 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9.1l-7.1 5.5C8 41.2 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.5 28.4c-.5-1.4-.7-2.9-.7-4.4s.3-3 .7-4.4l-7.1-5.5C2.9 17 2 20.4 2 24s.9 7 2.4 9.9l7.1-5.5z"/><path fill="#EA4335" d="M24 10.6c3.3 0 5.5 1.4 6.8 2.6l6-5.9C33.1 3.9 29.9 2 24 2 15.4 2 8 6.8 4.4 14.1l7.1 5.5C13.3 14.4 18.2 10.6 24 10.6z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+    <p class="hint" id="authnote" style="margin-top:16px">We get your username, avatar and email. Your email is never shown to anyone else.</p>
+    <p class="hint warn hide" id="autherr" style="margin-top:10px"></p>
+  </div>`;
+
+  const go = provider => async () => {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider, options: { redirectTo: location.href.split("#")[0] }
+    });
+    if (error) {
+      const e = root.querySelector("#autherr");
+      e.classList.remove("hide");
+      e.textContent = /not enabled|unsupported/i.test(error.message)
+        ? `${provider} sign-in isn't switched on in Supabase yet — Authentication → Sign In / Providers.`
+        : error.message;
+    }
+  };
+  root.querySelector("#github").onclick = go("github");
+  root.querySelector("#google").onclick = go("google");
+
+  // show whichever providers the project actually has enabled
+  fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_ANON_KEY } })
+    .then(r => r.json())
+    .then(s => {
+      const ext = s.external || {};
+      root.querySelector("#google").classList.toggle("hide", !ext.google);
+      root.querySelector("#github").classList.toggle("hide", !ext.github);
+      if (!ext.github && !ext.google) {
+        root.querySelector("#authnote").className = "hint warn";
+        root.querySelector("#authnote").textContent =
+          "No sign-in provider is switched on yet. Supabase → Authentication → Sign In / Providers.";
+      }
+    })
+    .catch(() => {});
+}
+
+/* ---------- channel setup ---------- */
+function renderChannelSetup() {
+  const g = session.user.user_metadata || {};
+  const suggestedHandle = (g.user_name || g.preferred_username || "")
+    .toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 24);
+  root.innerHTML = `<div class="panel">
+    <h1>Name your channel.</h1>
+    <p>This is what everyone sees. Your email stays private.</p>
+    <label class="lab" for="ch">Channel name</label>
+    <input class="in" id="ch" maxlength="40" value="${esc(g.full_name || g.name || g.user_name || "")}">
+    <label class="lab" for="hd">Handle</label>
+    <input class="in" id="hd" maxlength="24" value="${esc(suggestedHandle)}" placeholder="lowercase letters, numbers, dots">
+    <div class="hint" id="err" style="margin-top:10px"></div>
+    <div style="margin-top:18px"><button class="btn" id="go">Create channel</button></div>
+  </div>`;
+  const err = root.querySelector("#err");
+  root.querySelector("#go").onclick = async () => {
+    const channel = root.querySelector("#ch").value.trim();
+    const handle = root.querySelector("#hd").value.trim().toLowerCase().replace(/[^a-z0-9._]/g, "");
+    if (!channel || handle.length < 3) { err.className = "hint warn"; err.textContent = "A channel name and a handle of at least 3 characters are both required."; return; }
+    const { error } = await sb.from("profiles").insert({
+      id: session.user.id, handle, channel,
+      avatar_url: g.avatar_url || g.picture || null
+    });
+    if (error) { err.className = "hint warn"; err.textContent = error.message.includes("duplicate") ? "That handle is taken. Try another." : error.message; return; }
+    boot();
+  };
+}
+
+/* ---------- library ---------- */
+async function renderLibrary() {
+  view = { name: "library", tab: view.tab || "video" };
+  root.innerHTML = `<div class="wrap"><div class="loading">LOADING</div></div>`;
+  const { data } = await sb.from("videos")
+    .select("*, profiles(handle,channel), video_likes(count)")
+    .order("created_at", { ascending: false }).limit(60);
+  videos = data || [];
+  const list = videos.filter(v => v.kind === view.tab);
+
+  root.innerHTML = `<div class="wrap">
+    <div class="tabs">
+      <h2>UNSAID</h2>
+      <button class="tab ${view.tab === "video" ? "on" : ""}" data-k="video">videos</button>
+      <button class="tab ${view.tab === "short" ? "on" : ""}" data-k="short">shorts</button>
+      <span class="right"><button class="ghost" id="up">+ upload</button></span>
+    </div>
+    ${list.length === 0 ? `<div class="empty">
+        <div class="k disp">Nothing here yet.</div>
+        <p>${view.tab === "short" ? "Shorts are anything taller than it is wide." : "The first one sets the tone."}</p>
+        <button class="btn" id="up2">Upload ${view.tab === "short" ? "a Short" : "a video"}</button>
+      </div>`
+      : `<div class="grid ${view.tab === "short" ? "shorts" : ""}">${list.map(cardHTML).join("")}</div>`}
+  </div>`;
+
+  root.querySelectorAll(".tab").forEach(b => b.onclick = () => { view.tab = b.dataset.k; renderLibrary(); });
+  root.querySelectorAll("#up,#up2").forEach(b => b && (b.onclick = renderUpload));
+  root.querySelectorAll(".card").forEach(c => c.onclick = () => renderWatch(c.dataset.id));
+}
+
+function cardHTML(v) {
+  const likes = v.video_likes?.[0]?.count || 0;
+  return `<button class="card" data-id="${v.id}">
+    <span class="th" style="background-image:url('${esc(pub("thumbs", v.thumb))}')"></span>
+    <span class="ti">${esc(v.title)}</span>
+    <span class="me">${esc(v.profiles?.channel || "unknown")} · ${v.views} view${v.views === 1 ? "" : "s"} · ${likes} like${likes === 1 ? "" : "s"} · ${ago(v.created_at)}</span>
+  </button>`;
+}
+
+/* ---------- upload ---------- */
+function renderUpload() {
+  view = { name: "upload" };
+  root.innerHTML = `<div class="wrap"><div class="panel" style="margin-top:2vh">
+    <h1>Upload.</h1>
+    <p>Anything taller than it is wide is filed as a Short. Keep files under 50MB unless you've raised the limit in Supabase.</p>
+    <label class="lab" for="file">Video file</label>
+    <input class="in" type="file" id="file" accept="video/*">
+    <div class="hint" id="probe" style="margin-top:8px"></div>
+    <label class="lab" for="ti">Title</label>
+    <input class="in" id="ti" maxlength="140">
+    <label class="lab" for="sy">What's in it — the gate reads this to judge whether a comment is about it</label>
+    <textarea class="in" id="sy" rows="3"></textarea>
+    <label class="lab" for="mo">Moments, one per line, as "2:31 what happens" (optional)</label>
+    <textarea class="in" id="mo" rows="3"></textarea>
+    <div class="bar hide" id="bar"><i></i></div>
+    <div class="hint" id="err" style="margin-top:10px"></div>
+    <div style="margin-top:18px;display:flex;gap:10px">
+      <button class="btn" id="go" disabled>Publish</button>
+      <button class="ghost" id="cancel">cancel</button>
+    </div>
+  </div></div>`;
+
+  const $ = s => root.querySelector(s);
+  let meta = null;
+  $("#cancel").onclick = renderLibrary;
+
+  $("#file").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    $("#probe").className = "hint"; $("#probe").textContent = "reading…";
+    try {
+      meta = await probe(f);
+      $("#probe").textContent = `${meta.w}×${meta.h} · ${Math.round(meta.seconds)}s · ${(f.size / 1048576).toFixed(1)}MB · filed as ${meta.kind === "short" ? "a Short" : "a video"}`;
+      $("#go").disabled = false;
+    } catch { $("#probe").className = "hint warn"; $("#probe").textContent = "That file couldn't be read as video."; }
+  };
+
+  $("#go").onclick = async () => {
+    const file = $("#file").files[0], title = $("#ti").value.trim();
+    if (!file || !title) { $("#err").className = "hint warn"; $("#err").textContent = "A file and a title are both required."; return; }
+    $("#go").disabled = true; $("#bar").classList.remove("hide"); $("#bar").firstElementChild.style.width = "12%";
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const base = `${session.user.id}/${crypto.randomUUID()}`;
+      const path = `${base}.${ext}`;
+      const up = await sb.storage.from("videos").upload(path, file, { contentType: file.type });
+      if (up.error) throw up.error;
+      $("#bar").firstElementChild.style.width = "70%";
+
+      let thumb = null;
+      if (meta?.blob) {
+        const t = `${base}.jpg`;
+        const tu = await sb.storage.from("thumbs").upload(t, meta.blob, { contentType: "image/jpeg" });
+        if (!tu.error) thumb = t;
+      }
+      $("#bar").firstElementChild.style.width = "88%";
+
+      const moments = $("#mo").value.split("\n").map(l => l.trim()).filter(Boolean)
+        .map(l => { const m = l.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s+(.*)$/); return m ? { t: m[1], label: m[2] } : null; })
+        .filter(Boolean).slice(0, 8);
+
+      const { data, error } = await sb.from("videos").insert({
+        owner: session.user.id, title, synopsis: $("#sy").value.trim(),
+        moments, kind: meta.kind, path, thumb, seconds: Math.round(meta.seconds)
+      }).select("id").single();
+      if (error) throw error;
+      $("#bar").firstElementChild.style.width = "100%";
+      renderWatch(data.id);
+    } catch (e) {
+      $("#err").className = "hint warn";
+      $("#err").textContent = (e.message || String(e)) + " — nothing was published.";
+      $("#go").disabled = false;
+    }
+  };
+}
+
+/* read dimensions + grab a frame for the thumbnail */
+function probe(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement("video");
+    v.preload = "metadata"; v.muted = true; v.src = url;
+    v.onloadedmetadata = () => {
+      const w = v.videoWidth, h = v.videoHeight, seconds = v.duration || 0;
+      v.currentTime = Math.min(1, seconds / 3);
+      v.onseeked = () => {
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(v, 0, 0, w, h);
+        c.toBlob(blob => { URL.revokeObjectURL(url); res({ w, h, seconds, kind: h > w ? "short" : "video", blob }); }, "image/jpeg", .8);
+      };
+      v.onerror = () => { URL.revokeObjectURL(url); res({ w, h, seconds, kind: h > w ? "short" : "video", blob: null }); };
+    };
+    v.onerror = () => { URL.revokeObjectURL(url); rej(new Error("unreadable")); };
+  });
+}
+
+/* ---------- watch ---------- */
+async function renderWatch(id) {
+  view = { name: "watch", id, tab: view.tab };
+  root.innerHTML = `<div class="wrap"><div class="loading">LOADING</div></div>`;
+
+  const { data: v } = await sb.from("videos")
+    .select("*, profiles(handle,channel,avatar_url), video_likes(user_id)").eq("id", id).single();
+  if (!v) return renderLibrary();
+  // bump_view is one row per person, so this is idempotent — it returns the real total
+  const { data: viewTotal } = await sb.rpc("bump_view", { vid: id });
+  const shownViews = viewTotal ?? v.views;
+
+  const { data: cs } = await sb.from("comments")
+    .select("*, profiles(handle,channel), comment_likes(user_id)").eq("video_id", id);
+  let comments = shuffle(cs || []);
+  let sort = "shuffled", anchor = null, typed = 0, pasted = 0, started = null;
+
+  const vLikes = v.video_likes || [];
+  const iLike = vLikes.some(l => l.user_id === session.user.id);
+
+  root.innerHTML = `<div class="wrap"><div class="two">
+    <section>
+      <button class="ghost" id="back" style="margin-bottom:16px">← all videos</button>
+      <div class="stage ${v.kind === "short" ? "short" : ""}">
+        <video src="${esc(pub("videos", v.path))}" controls playsinline ${v.kind === "short" ? "loop" : ""}></video>
+      </div>
+      <h1 class="vt">${esc(v.title)}</h1>
+      <div class="vmeta">
+        <span>${esc(v.profiles?.channel || "unknown")}</span>
+        <span>${shownViews} view${shownViews === 1 ? "" : "s"}</span>
+        <button class="like ${iLike ? "on" : ""}" id="vlike"><span class="pip"></span>${vLikes.length}</button>
+        ${v.owner === session.user.id ? `<button class="ghost" id="vdel">delete</button>` : ""}
+      </div>
+      ${v.synopsis ? `<p class="syn">${esc(v.synopsis)}</p>` : ""}
+      ${(v.moments || []).length ? `<div class="momlist">${v.moments.map(m =>
+        `<button class="mom" data-t="${esc(m.t)}"><span class="t">${esc(m.t)}</span><span class="l">${esc(m.label)}</span></button>`).join("")}</div>` : ""}
+    </section>
+
+    <section>
+      <div class="gate">
+        <div class="gatehead"><span class="dot"></span><span class="k">Write about this video</span></div>
+        <div class="anchorbar hide" id="abar"><span id="atext"></span><button id="aclear">clear</button></div>
+        <textarea id="draft" placeholder="What did you notice that nobody else did?"></textarea>
+        <div class="gbar">
+          <button class="btn" id="post" disabled>Post</button>
+          <span class="hint" id="ghint">0 words · typed here · no minimum</span>
+          <button class="ghost hide" id="clear" style="margin-left:auto">clear</button>
+        </div>
+        <div class="checks hide" id="checks"></div>
+      </div>
+      <div id="verdict"></div>
+      <div class="thread">
+        <div class="threadhead">
+          <h2 id="ccount">${comments.length} comment${comments.length === 1 ? "" : "s"}</h2>
+          <span style="margin-left:auto;display:flex;gap:6px">
+            <button class="tab on" data-s="shuffled">shuffled</button>
+            <button class="tab" data-s="newest">newest</button>
+            <button class="tab" data-s="liked">most liked</button>
+          </span>
+        </div>
+        <div class="sortnote" id="snote">reshuffled every visit, so nothing sits on top long enough to copy</div>
+        <div id="list"></div>
+      </div>
+    </section>
+  </div></div>`;
+
+  const $ = s => root.querySelector(s);
+  $("#back").onclick = renderLibrary;
+
+  $("#vlike").onclick = async e => {
+    const on = e.currentTarget.classList.contains("on");
+    if (on) await sb.from("video_likes").delete().match({ video_id: id, user_id: session.user.id });
+    else await sb.from("video_likes").insert({ video_id: id, user_id: session.user.id });
+    renderWatch(id);
+  };
+  if ($("#vdel")) $("#vdel").onclick = async () => {
+    await sb.from("videos").delete().eq("id", id);
+    await sb.storage.from("videos").remove([v.path]);
+    renderLibrary();
+  };
+
+  root.querySelectorAll(".mom").forEach(b => b.onclick = () => {
+    anchor = anchor === b.dataset.t ? null : b.dataset.t;
+    root.querySelectorAll(".mom").forEach(x => x.classList.toggle("on", x.dataset.t === anchor));
+    $("#abar").classList.toggle("hide", !anchor);
+    $("#atext").textContent = anchor ? "Responding to " + anchor : "";
+    $("#draft").focus();
+  });
+  $("#aclear").onclick = () => { anchor = null; $("#abar").classList.add("hide"); root.querySelectorAll(".mom").forEach(x => x.classList.remove("on")); };
+
+  root.querySelectorAll("[data-s]").forEach(b => b.onclick = () => {
+    sort = b.dataset.s;
+    root.querySelectorAll("[data-s]").forEach(x => x.classList.toggle("on", x === b));
+    $("#snote").classList.toggle("hide", sort !== "shuffled");
+    paint();
+  });
+
+  /* composer telemetry */
+  const ta = $("#draft");
+  ta.addEventListener("paste", e => { pasted += ((e.clipboardData || window.clipboardData).getData("text") || "").length; });
+  ta.addEventListener("keydown", e => { if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter") typed++; });
+  ta.addEventListener("input", () => {
+    if (started === null && ta.value.length) started = Date.now();
+    const words = ta.value.trim().split(/\s+/).filter(Boolean).length;
+    const ratio = ta.value.length ? pasted / ta.value.length : 0;
+    const h = $("#ghint");
+    h.className = "hint" + (ratio > .35 ? " warn" : "");
+    h.textContent = ratio > .35 ? "pasted — type it here instead" : `${words} word${words === 1 ? "" : "s"} · typed here · no minimum`;
+    $("#post").disabled = !ta.value.trim();
+    $("#clear").classList.toggle("hide", !ta.value);
+  });
+  $("#clear").onclick = () => { ta.value = ""; typed = pasted = 0; started = null; ta.dispatchEvent(new Event("input")); $("#verdict").innerHTML = ""; $("#checks").classList.add("hide"); ta.focus(); };
+
+  function setChecks(o) {
+    $("#checks").classList.remove("hide");
+    const row = (st, l) => `<div class="check ${st || ""}"><span class="box"></span><span>${l}</span></div>`;
+    $("#checks").innerHTML =
+      row(o.script, "not a phrase from the script") +
+      row(o.machine, "written in this box, by a person") +
+      row(o.dupe, "not already said in this thread") +
+      row(o.subject, "about this video, not videos in general");
+  }
+  function returned(why, body, extra = {}) {
+    $("#verdict").innerHTML = `<div class="returned">
+      <div class="stamp disp">RETURNED</div>
+      <div class="why">${esc(why)}</div>
+      <p class="body">${esc(body)}</p>
+      ${extra.quoted ? `<div class="quoted">${esc(extra.quoted)}</div>` : ""}
+      ${extra.tells?.length ? `<div class="tells">tells: ${esc(extra.tells.join(" · "))}</div>` : ""}
+    </div>`;
+  }
+
+  $("#post").onclick = async () => {
+    const draft = ta.value.trim(); if (!draft) return;
+    $("#post").disabled = true; $("#post").textContent = "Checking…"; $("#verdict").innerHTML = "";
+    const done = () => { $("#post").disabled = false; $("#post").textContent = "Post"; };
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+
+    setChecks({ script: "run" }); await wait(300);
+    const hit = SCRIPT.find(([rx]) => rx.test(draft));
+    if (hit) { setChecks({ script: "bad" }); returned("Recycled phrase", `That's "${hit[1]}". It has appeared under roughly every video ever made. Write the version only you would write.`); return done(); }
+
+    setChecks({ script: "ok", machine: "run" }); await wait(300);
+    const tells = localTells(draft);
+    if (ta.value.length && pasted / ta.value.length > .35) {
+      setChecks({ script: "ok", machine: "bad" });
+      returned("Arrived as a paste", "Most of this was pasted in, so there's no record of anyone writing it. Type it into the box and it goes through. That's the whole rule — nobody here is guessing at your text.", { tells });
+      return done();
+    }
+
+    setChecks({ script: "ok", machine: "ok", dupe: "run" }); await wait(260);
+    const dup = comments.find(c => overlap(c.body, draft) > .62);
+    if (dup) { setChecks({ script: "ok", machine: "ok", dupe: "bad" }); returned("Already said in this thread", "Someone got here first with this point. Add what they missed, or argue with them — both are welcome.", { quoted: dup.body }); return done(); }
+
+    setChecks({ script: "ok", machine: "ok", dupe: "ok", subject: "run" });
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/gate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_ANON_KEY },
+        body: JSON.stringify({
+          video: { title: v.title, channel: v.profiles?.channel, synopsis: v.synopsis, moments: v.moments },
+          draft, anchor, existing: comments.map(c => c.body)
+        })
+      });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error);
+
+      if (j.machine === "machine" && (tells.length >= 1 || draft.split(/\s+/).length > 45)) {
+        setChecks({ script: "ok", machine: "bad", dupe: "ok", subject: "ok" });
+        returned("Reads as machine-written", "This has the shape of generated text rather than someone reacting. If it's yours, say it the way you'd say it out loud and it'll go through — this check is a judgment call, not a verdict.", { tells: [...new Set([...tells, ...(j.machine_tells || [])])].slice(0, 5) });
+        return done();
+      }
+      if (j.subject === "fail") {
+        setChecks({ script: "ok", machine: "ok", dupe: "ok", subject: "bad" });
+        returned("Could be about any video", j.subject_reason || "Name something that only happened in this video.");
+        return done();
+      }
+
+      setChecks({ script: "ok", machine: "ok", dupe: "ok", subject: "ok" });
+      const { data: row, error } = await sb.from("comments").insert({
+        video_id: id, author: session.user.id, body: draft,
+        anchor: j.anchor || anchor, typed_here: true, keystrokes: typed,
+        seconds: started ? Math.max(1, Math.round((Date.now() - started) / 1000)) : 0
+      }).select("*, profiles(handle,channel), comment_likes(user_id)").single();
+      if (error) throw error;
+      comments = [row, ...comments];
+      ta.value = ""; typed = pasted = 0; started = null; anchor = null;
+      ta.dispatchEvent(new Event("input"));
+      $("#abar").classList.add("hide");
+      $("#verdict").innerHTML = `<div class="posted">Posted. It's yours and it's the only one like it here.</div>`;
+      paint();
+    } catch (e) {
+      setChecks({ script: "ok", machine: "ok", dupe: "ok", subject: "bad" });
+      returned("Gate offline", "The last check couldn't run, so nothing was posted. Your draft is still here — try again in a moment.");
+    }
+    done();
+  };
+
+  function paint() {
+    let list = [...comments];
+    if (sort === "newest") list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    if (sort === "liked") list.sort((a, b) => (b.comment_likes?.length || 0) - (a.comment_likes?.length || 0));
+    $("#ccount").textContent = `${comments.length} comment${comments.length === 1 ? "" : "s"}`;
+    $("#list").innerHTML = list.length ? list.map(c => {
+      const likes = c.comment_likes || [], mine = c.author === session.user.id, liked = likes.some(l => l.user_id === session.user.id);
+      return `<article class="c">
+        <div class="who"><span class="${mine ? "me" : ""}">${esc(c.profiles?.handle || "someone")}</span><span>${ago(c.created_at)}</span>
+        ${mine ? `<button class="del" data-del="${c.id}">delete</button>` : ""}</div>
+        <p>${esc(c.body)}</p>
+        <div class="prov">
+          <button class="like ${liked ? "on" : ""}" data-like="${c.id}"><span class="pip"></span>${likes.length}</button>
+          ${c.anchor ? `<span>on ${esc(c.anchor)}</span>` : ""}
+          ${c.typed_here ? `<span>typed here in ${c.seconds}s</span>` : ""}
+        </div></article>`;
+    }).join("") : `<div class="empty"><div class="k disp">No comments yet.</div><p>Whatever goes first decides what this thread turns into.</p></div>`;
+
+    $("#list").querySelectorAll("[data-like]").forEach(b => b.onclick = async () => {
+      const cid = b.dataset.like, c = comments.find(x => x.id === cid);
+      const liked = (c.comment_likes || []).some(l => l.user_id === session.user.id);
+      if (liked) { await sb.from("comment_likes").delete().match({ comment_id: cid, user_id: session.user.id }); c.comment_likes = c.comment_likes.filter(l => l.user_id !== session.user.id); }
+      else { await sb.from("comment_likes").insert({ comment_id: cid, user_id: session.user.id }); c.comment_likes = [...(c.comment_likes || []), { user_id: session.user.id }]; }
+      paint();
+    });
+    $("#list").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+      await sb.from("comments").delete().eq("id", b.dataset.del);
+      comments = comments.filter(x => x.id !== b.dataset.del);
+      paint();
+    });
+  }
+  paint();
+}
+</script>
+</body>
+</html>
