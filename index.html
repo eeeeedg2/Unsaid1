@@ -361,10 +361,28 @@ function renderChannelSetup() {
 async function renderLibrary() {
   view = { name: "library", tab: view.tab || "video" };
   root.innerHTML = `<div class="wrap"><div class="loading">LOADING</div></div>`;
-  const { data } = await sb.from("videos")
-    .select("*, profiles(handle,channel), video_likes(count)")
-    .order("created_at", { ascending: false }).limit(60);
-  videos = data || [];
+  const [vres, pres, lres] = await Promise.all([
+    sb.from("videos").select("*").order("created_at", { ascending: false }).limit(60),
+    sb.from("profiles").select("id,handle,channel"),
+    sb.from("video_likes").select("video_id")
+  ]);
+
+  if (vres.error) {
+    root.innerHTML = `<div class="wrap"><div class="empty">
+      <div class="k disp">Couldn't load the library.</div>
+      <p>${esc(vres.error.message || "unknown error")}</p>
+    </div></div>`;
+    return;
+  }
+
+  const byId = Object.fromEntries((pres.data || []).map(p => [p.id, p]));
+  const likeCount = {};
+  (lres.data || []).forEach(r => { likeCount[r.video_id] = (likeCount[r.video_id] || 0) + 1; });
+  videos = (vres.data || []).map(v => ({
+    ...v,
+    profiles: byId[v.owner] || null,
+    video_likes: [{ count: likeCount[v.id] || 0 }]
+  }));
   const list = videos.filter(v => v.kind === view.tab);
 
   root.innerHTML = `<div class="wrap">
@@ -375,12 +393,19 @@ async function renderLibrary() {
       <span class="right"><button class="ghost" id="up">+ upload</button></span>
     </div>
     ${list.length === 0 ? `<div class="empty">
-        <div class="k disp">Nothing here yet.</div>
-        <p>${view.tab === "short" ? "Shorts are anything taller than it is wide." : "The first one sets the tone."}</p>
-        <button class="btn" id="up2">Upload ${view.tab === "short" ? "a Short" : "a video"}</button>
+        <div class="k disp">${other > 0 ? `Nothing in ${view.tab === "short" ? "Shorts" : "Videos"} yet.` : "Nothing here yet."}</div>
+        <p>${other > 0
+            ? `There ${other === 1 ? "is 1" : `are ${other}`} over in ${view.tab === "short" ? "Videos" : "Shorts"}. Anything taller than it is wide is filed as a Short.`
+            : view.tab === "short" ? "Shorts are anything taller than it is wide." : "The first one sets the tone."}</p>
+        ${other > 0
+          ? `<button class="btn" id="swap">Go to ${view.tab === "short" ? "Videos" : "Shorts"}</button>`
+          : `<button class="btn" id="up2">Upload ${view.tab === "short" ? "a Short" : "a video"}</button>`}
       </div>`
       : `<div class="grid ${view.tab === "short" ? "shorts" : ""}">${list.map(cardHTML).join("")}</div>`}
   </div>`;
+
+  const swap = root.querySelector("#swap");
+  if (swap) swap.onclick = () => { view.tab = view.tab === "short" ? "video" : "short"; renderLibrary(); };
 
   root.querySelectorAll(".tab").forEach(b => b.onclick = () => { view.tab = b.dataset.k; renderLibrary(); });
   root.querySelectorAll("#up,#up2").forEach(b => b && (b.onclick = renderUpload));
@@ -463,10 +488,13 @@ function renderUpload() {
       }).select("id").single();
       if (error) throw error;
       $("#bar").firstElementChild.style.width = "100%";
+      view.tab = meta.kind;
       renderWatch(data.id);
     } catch (e) {
+      // the file is already in storage but nothing points at it — remove it
+      try { await sb.storage.from("videos").remove([`${session.user.id}/${(e.__path || "")}`]); } catch {}
       $("#err").className = "hint warn";
-      $("#err").textContent = (e.message || String(e)) + " — nothing was published.";
+      $("#err").textContent = (e.message || e.error_description || JSON.stringify(e)) + " — nothing was published.";
       $("#go").disabled = false;
     }
   };
@@ -498,15 +526,30 @@ async function renderWatch(id) {
   view = { name: "watch", id, tab: view.tab };
   root.innerHTML = `<div class="wrap"><div class="loading">LOADING</div></div>`;
 
-  const { data: v } = await sb.from("videos")
-    .select("*, profiles(handle,channel,avatar_url), video_likes(user_id)").eq("id", id).single();
-  if (!v) return renderLibrary();
+  const { data: vRow, error: vErr } = await sb.from("videos").select("*").eq("id", id).maybeSingle();
+  if (vErr || !vRow) return renderLibrary();
+
+  const [own, vlk, cms, prf, clk] = await Promise.all([
+    sb.from("profiles").select("handle,channel,avatar_url").eq("id", vRow.owner).maybeSingle(),
+    sb.from("video_likes").select("user_id").eq("video_id", id),
+    sb.from("comments").select("*").eq("video_id", id),
+    sb.from("profiles").select("id,handle,channel"),
+    sb.from("comment_likes").select("comment_id,user_id")
+  ]);
+
+  const v = { ...vRow, profiles: own.data || null, video_likes: vlk.data || [] };
+  const pmap = Object.fromEntries((prf.data || []).map(p => [p.id, p]));
+  const attach = c => ({
+    ...c,
+    profiles: pmap[c.author] || null,
+    comment_likes: (clk.data || []).filter(l => l.comment_id === c.id)
+  });
+
   // bump_view is one row per person, so this is idempotent — it returns the real total
   const { data: viewTotal } = await sb.rpc("bump_view", { vid: id });
   const shownViews = viewTotal ?? v.views;
 
-  const { data: cs } = await sb.from("comments")
-    .select("*, profiles(handle,channel), comment_likes(user_id)").eq("video_id", id);
+  const cs = (cms.data || []).map(attach);
   let comments = shuffle(cs || []);
   let sort = "shuffled", anchor = null, typed = 0, pasted = 0, started = null;
 
@@ -672,12 +715,13 @@ async function renderWatch(id) {
       }
 
       setChecks({ script: "ok", machine: "ok", dupe: "ok", subject: "ok" });
-      const { data: row, error } = await sb.from("comments").insert({
+      const { data: inserted, error } = await sb.from("comments").insert({
         video_id: id, author: session.user.id, body: draft,
         anchor: j.anchor || anchor, typed_here: true, keystrokes: typed,
         seconds: started ? Math.max(1, Math.round((Date.now() - started) / 1000)) : 0
-      }).select("*, profiles(handle,channel), comment_likes(user_id)").single();
+      }).select("*").single();
       if (error) throw error;
+      const row = { ...inserted, profiles: { handle: profile.handle, channel: profile.channel }, comment_likes: [] };
       comments = [row, ...comments];
       ta.value = ""; typed = pasted = 0; started = null; anchor = null;
       ta.dispatchEvent(new Event("input"));
