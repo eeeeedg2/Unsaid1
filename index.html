@@ -965,6 +965,7 @@ async function renderWatchInner(id) {
         <span>${esc(v.profiles?.channel || "unknown")}${badge(v.owner)}</span>
         <span>${shownViews} view${shownViews === 1 ? "" : "s"}</span>
         <button class="like ${iLike ? "on" : ""}" id="vlike"><span class="pip"></span>${vLikes.length}</button>
+        ${v.owner === session.user.id && v.kind === "short" ? `<button class="ghost" id="ixedit">${v.interactive ? "edit interactive" : "make interactive"}</button>` : ""}
         ${v.owner === session.user.id ? `<button class="ghost" id="vdel">delete</button>` : ""}
         ${CONTACT_EMAIL && v.owner !== session.user.id
           ? `<a class="ghost" style="text-decoration:none" href="mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("UNSAID report: " + v.title)}&body=${encodeURIComponent("Video id: " + v.id + "\nChannel: " + (v.profiles?.channel || "unknown") + "\n\nWhat's wrong with it:\n")}">report</a>`
@@ -1022,7 +1023,98 @@ async function renderWatchInner(id) {
   /* ---------- interactive Shorts + replay layer ---------- */
   const vid = $("#vid"), over = $("#ixover"), res = $("#ixres");
   const mainSrc = pub("videos", v.path);
-  let onMain = true, choseThisPlay = false, skipped = false, plays = 0, lastT = 0;
+  let onMain = true, choseThisPlay = false, skipped = false, plays = 0, lastT = 0, editing = false;
+
+  /* creator: turn Call it / Two endings on for a Short that's already posted */
+  if ($("#ixedit")) $("#ixedit").onclick = () => {
+    editing = true; hideOver();
+    vid.loop = false;
+    let kind = v.interactive || "", at = v.pause_at || null;
+    res.innerHTML = `<div class="ixres">
+      <div class="big">Make it interactive</div>
+      <div class="ixopts" style="margin-top:10px">
+        <button type="button" class="ixo" data-k="">off</button>
+        <button type="button" class="ixo" data-k="callit">call it</button>
+        <button type="button" class="ixo" data-k="endings">two endings${isPlus ? "" : " · plus"}</button>
+      </div>
+      <div class="hint" id="exwhat" style="margin-top:8px"></div>
+      <div id="exbody">
+        <div class="ixrow"><button type="button" class="ghost" id="exset">pause here</button><span class="hint" id="exat"></span></div>
+        <div id="excall">
+          <label class="lab" for="exans">What actually happens next — hidden from viewers</label>
+          <textarea class="in" id="exans" rows="2" maxlength="500" placeholder="Used only to check who called it. Nobody sees this."></textarea>
+        </div>
+        <div id="exend">
+          <label class="lab" for="exa">Ending A — the rest of this video</label>
+          <input class="in" id="exa" maxlength="40" value="${esc(v.ending_a || "")}">
+          <label class="lab" for="exb">Ending B — a separate clip</label>
+          <input class="in" id="exb" maxlength="40" value="${esc(v.ending_b || "")}">
+          <input class="in" type="file" id="exfile" accept="video/*" style="margin-top:8px">
+          ${v.alt_path ? `<div class="hint" style="margin-top:6px">leave empty to keep the current ending B clip</div>` : ""}
+        </div>
+      </div>
+      <div class="hint" id="exerr" style="margin-top:10px"></div>
+      <div class="ixrow" style="margin-top:12px"><button class="btn" id="exsave">Save</button><button class="ghost" id="excancel">cancel</button></div>
+      ${v.interactive ? `<div class="hint" style="margin-top:10px">Saving resets the calls and picks made so far.</div>` : ""}
+    </div>`;
+    const q = s => res.querySelector(s);
+    const paint2 = () => {
+      res.querySelectorAll(".ixo").forEach(b => b.classList.toggle("on", b.dataset.k === kind));
+      q("#exwhat").textContent = kind === "callit"
+        ? "Play or scrub the video above to the moment right before the payoff, then tap “pause here”."
+        : kind === "endings" ? "Scrub the video above to the decision point, then tap “pause here”." : "Viewers watch it as a normal Short.";
+      q("#exbody").classList.toggle("hide", !kind);
+      q("#excall").classList.toggle("hide", kind !== "callit");
+      q("#exend").classList.toggle("hide", kind !== "endings");
+      q("#exat").textContent = at ? `pauses at ${Number(at).toFixed(1)}s ✓` : "no pause point yet";
+    };
+    res.querySelectorAll(".ixo").forEach(b => b.onclick = () => {
+      if (b.dataset.k === "endings" && !isPlus) { q("#exwhat").innerHTML = `Two endings is part of Plus. <a href="#" id="explus">See Plus</a>`; q("#explus").onclick = e => { e.preventDefault(); renderPlus(); }; return; }
+      kind = b.dataset.k; paint2();
+    });
+    q("#exset").onclick = () => {
+      const t = vid.currentTime;
+      if (t < 0.5 || t > (vid.duration || 0) - 0.5) { q("#exat").className = "hint warn"; q("#exat").textContent = "pick a moment after the start and before the very end"; return; }
+      vid.pause(); at = Math.round(t * 10) / 10; q("#exat").className = "hint"; paint2();
+    };
+    q("#excancel").onclick = () => renderWatch(id);
+    q("#exsave").onclick = async () => {
+      const fail = m => { q("#exerr").className = "hint warn"; q("#exerr").textContent = m; q("#exsave").disabled = false; q("#exsave").textContent = "Save"; };
+      q("#exsave").disabled = true; q("#exsave").textContent = "Saving…";
+      let alt = v.alt_path || null, uploaded = null;
+      if (kind === "endings") {
+        const f = q("#exfile").files[0];
+        if (f) {
+          const lim = isPlus ? LIMITS.plus : LIMITS.free;
+          if (f.size > lim.mb * 1048576) return fail(`Ending B is over the ${lim.mb}MB limit.`);
+          uploaded = `${me}/${crypto.randomUUID()}-b.${(f.name.split(".").pop() || "mp4").toLowerCase()}`;
+          const up = await sb.storage.from("videos").upload(uploaded, f, { contentType: f.type });
+          if (up.error) return fail(up.error.message);
+          alt = uploaded;
+        }
+        if (!alt) return fail("Add the ending B clip.");
+      }
+      const { error } = await sb.rpc("set_interactive", {
+        p_video: id, p_kind: kind || null, p_pause: kind ? at : null,
+        p_answer: kind === "callit" ? q("#exans").value : null,
+        p_alt: kind === "endings" ? alt : null,
+        p_a: kind === "endings" ? q("#exa").value : null, p_b: kind === "endings" ? q("#exb").value : null,
+      });
+      if (error) {
+        if (uploaded) await sb.storage.from("videos").remove([uploaded]);
+        const m = error.message || "";
+        return fail(/pause_required/.test(m) ? "Set the pause point first." :
+          /answer_required/.test(m) ? "Write what actually happens (at least a few words)." :
+          /labels_required/.test(m) ? "Name both endings." :
+          /plus_required/.test(m) ? "Two endings needs Plus." :
+          /set_interactive/.test(m) ? "This needs a quick database update first — ask Claude to apply it." : m);
+      }
+      // the old ending B clip is no longer used
+      if (v.alt_path && v.alt_path !== alt) await sb.storage.from("videos").remove([v.alt_path]);
+      renderWatch(id);
+    };
+    paint2();
+  };
 
   function showOver(html) { over.innerHTML = html; over.classList.remove("hide"); }
   function hideOver() { over.classList.add("hide"); over.innerHTML = ""; }
@@ -1152,7 +1244,7 @@ async function renderWatchInner(id) {
   vid.addEventListener("timeupdate", () => {
     const t = vid.currentTime;
     if (wrapped(t)) { plays++; choseThisPlay = false; }
-    if (onMain && ixKind && v.pause_at && t >= v.pause_at && lastT < v.pause_at + 0.6) {
+    if (!editing && onMain && ixKind && v.pause_at && t >= v.pause_at && lastT < v.pause_at + 0.6) {
       if (ixKind === "callit" && !isOwner && !myCall && !skipped) askCall();
       if (ixKind === "endings" && !choseThisPlay) askEnding();
     }
@@ -1163,7 +1255,7 @@ async function renderWatchInner(id) {
     // looping fires a seek back to 0, so count the replay here before lastT resets
     if (vid.loop && wrapped(vid.currentTime)) { plays++; choseThisPlay = false; }
     // no skipping past the pause point before you've called it
-    if (ixKind === "callit" && !isOwner && !myCall && !skipped && vid.currentTime > v.pause_at) {
+    if (!editing && ixKind === "callit" && !isOwner && !myCall && !skipped && vid.currentTime > v.pause_at) {
       vid.currentTime = Math.max(0, v.pause_at - 0.05);
       askCall();
     }
@@ -1171,6 +1263,7 @@ async function renderWatchInner(id) {
   });
   vid.addEventListener("ended", () => {
     plays++;
+    if (editing) return;
     if (ixKind === "callit" && (myCall || skipped)) callResults();
     if (ixKind === "endings") splitResults();
     if (!onMain) { onMain = true; vid.src = mainSrc; }
