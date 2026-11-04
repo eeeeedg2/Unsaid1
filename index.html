@@ -146,6 +146,21 @@ h1.vt{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:cla
 footer{border-top:1.5px solid var(--ink);margin-top:40px;padding:20px 22px 40px;font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim);max-width:1180px;margin-left:auto;margin-right:auto;line-height:1.8}
 footer b{color:var(--ink);font-weight:400}
 .loading{padding:60px 22px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.1em}
+.plus{display:inline-block;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--paper);background:var(--red);padding:1px 6px 0;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.perks{list-style:none;padding:0;margin:18px 0}
+.perks li{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.perks li:last-child{border-bottom:1px solid var(--line)}
+.perks .n{font-family:'Space Mono',monospace;font-size:11px;color:var(--red);min-width:22px;padding-top:3px}
+.fine{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim);line-height:1.7;margin-top:14px}
+.stats{width:100%;border-collapse:collapse;margin-top:18px;font-family:'Space Mono',monospace;font-size:11.5px}
+.stats th{text-align:right;font-weight:400;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;font-size:10px;padding:8px 6px;border-bottom:1.5px solid var(--ink)}
+.stats th:first-child,.stats td:first-child{text-align:left}
+.stats td{text-align:right;padding:10px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.stats td:first-child{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:14px;max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.totals div{border:1.5px solid var(--ink);padding:12px}
+.totals b{display:block;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;letter-spacing:-.03em}
+.totals span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 </style>
 </head>
 <body>
@@ -163,6 +178,7 @@ footer b{color:var(--ink);font-weight:400}
   Comments must be typed in the box. Pasted text is refused — that's the only check for machine writing that actually works, so detection alone isn't relied on.<br>
   The last check sends your comment and the video's description to Google's Gemini API. On its free tier, Google may use that text to improve their models.
   <span id="contactline"></span>
+  <br><a href="terms.html">Terms of Service</a>
 </footer>
 
 <script type="module">
@@ -199,8 +215,49 @@ if (CONTACT_EMAIL) {
     `<br>Something here that shouldn't be? Write to <a href="mailto:${CONTACT_EMAIL}?subject=UNSAID%20report">${CONTACT_EMAIL}</a> and it comes down.`;
 }
 
+/* ---------- Unsaid Plus ---------- */
+// Must match the Stripe price set in PRICE_MAP {"plus": "price_..."}.
+const PLUS_PRICE = "$4 / month";
+const LIMITS = {
+  free: { mb: 20, seconds: 120 },
+  plus: { mb: 50, seconds: 900 },
+};
+const fmtLen = s => s >= 60 ? `${Math.round(s / 60)} min` : `${s}s`;
+
 /* ---------- state ---------- */
 let session = null, profile = null, view = { name: "library", tab: "video" }, videos = [], firstLoad = true;
+let isPlus = false, plusIds = new Set(), checkoutState = null;
+{
+  const q = new URLSearchParams(location.search);
+  if (q.get("checkout")) {
+    checkoutState = q.get("checkout");
+    history.replaceState(null, "", location.pathname + location.hash);
+  }
+}
+const badge = uid => plusIds.has(uid) ? `<span class="plus" title="Unsaid Plus supporter">plus</span>` : "";
+
+async function loadPlus() {
+  const [mine, all] = await Promise.all([
+    session ? sb.from("entitlements").select("status,current_period_end").eq("feature", "plus") : Promise.resolve({ data: [] }),
+    sb.rpc("plus_members"),
+  ]);
+  const now = Date.now();
+  isPlus = (mine.data || []).some(r =>
+    ["active", "trialing", "past_due"].includes(r.status) &&
+    (!r.current_period_end || new Date(r.current_period_end).getTime() > now));
+  plusIds = new Set(all.data || []);
+}
+
+async function billing(action) {
+  const { data, error } = await sb.functions.invoke("billing", { body: { action, feature: "plus" } });
+  if (error) {
+    let msg = error.message;
+    try { msg = (await error.context.json()).error || msg; } catch {}
+    throw new Error(msg);
+  }
+  if (!data?.url) throw new Error("No checkout link came back.");
+  location.href = data.url;
+}
 
 /* ---------- the script ---------- */
 const SCRIPT = [
@@ -278,9 +335,15 @@ async function boot() {
   if (!session) { head.classList.add("hide"); return renderSignIn(); }
   const { data } = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
   profile = data;
+  await loadPlus();
+  if (checkoutState === "success") {
+    // the Stripe webhook can land a few seconds after the redirect back
+    for (let i = 0; i < 8 && !isPlus; i++) { await new Promise(r => setTimeout(r, 1500)); await loadPlus(); }
+  }
   head.classList.remove("hide");
   renderHead();
   if (!profile) return renderChannelSetup();
+  if (checkoutState) { const st = checkoutState; checkoutState = null; return renderPlus(st); }
   if (view.name === "watch") return renderWatch(view.id);
   renderLibrary();
 }
@@ -289,10 +352,12 @@ function renderHead() {
   if (!profile) { headright.innerHTML = ""; return; }
   headright.innerHTML =
     `<button class="ghost" id="uploadbtn">upload</button>
-     <span><b>${esc(profile.channel)}</b></span>
+     <button class="ghost" id="plusbtn">${isPlus ? "stats" : "get plus"}</button>
+     <span><b>${esc(profile.channel)}</b>${badge(profile.id)}</span>
      ${profile.avatar_url ? `<img class="pfp" src="${esc(profile.avatar_url)}" alt="">` : ""}
      <button class="ghost" id="signout">sign out</button>`;
   headright.querySelector("#uploadbtn").onclick = renderUpload;
+  headright.querySelector("#plusbtn").onclick = () => isPlus ? renderStats() : renderPlus();
   headright.querySelector("#signout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 }
 document.getElementById("home").onclick = () => { view = { name: "library", tab: view.tab || "video" }; renderLibrary(); };
@@ -457,7 +522,7 @@ function cardHTML(v) {
   return `<button class="card" data-id="${v.id}">
     <span class="th" style="background-image:url('${esc(pub("thumbs", v.thumb))}')"></span>
     <span class="ti">${esc(v.title)}</span>
-    <span class="me">${esc(v.profiles?.channel || "unknown")} · ${v.views} view${v.views === 1 ? "" : "s"} · ${likes} like${likes === 1 ? "" : "s"} · ${ago(v.created_at)}</span>
+    <span class="me">${esc(v.profiles?.channel || "unknown")}${badge(v.owner)} · ${v.views} view${v.views === 1 ? "" : "s"} · ${likes} like${likes === 1 ? "" : "s"} · ${ago(v.created_at)}</span>
   </button>`;
 }
 
@@ -466,7 +531,9 @@ function renderUpload() {
   view = { name: "upload" };
   root.innerHTML = `<div class="wrap"><div class="panel" style="margin-top:2vh">
     <h1>Upload.</h1>
-    <p>Anything taller than it is wide is filed as a Short. Keep files under 50MB unless you've raised the limit in Supabase.</p>
+    <p>Anything taller than it is wide is filed as a Short. ${isPlus
+      ? `Plus lets you upload up to ${LIMITS.plus.mb}MB and ${fmtLen(LIMITS.plus.seconds)}.`
+      : `Uploads can be up to ${LIMITS.free.mb}MB and ${fmtLen(LIMITS.free.seconds)}. <a href="#" id="pluslink">Plus</a> raises that to ${LIMITS.plus.mb}MB and ${fmtLen(LIMITS.plus.seconds)}.`}</p>
     <label class="lab" for="file">Video file</label>
     <input class="in" type="file" id="file" accept="video/*">
     <div class="hint" id="probe" style="margin-top:8px"></div>
@@ -488,6 +555,9 @@ function renderUpload() {
   const $ = s => root.querySelector(s);
   let meta = null;
   $("#cancel").onclick = renderLibrary;
+  const pl = $("#pluslink");
+  if (pl) pl.onclick = e => { e.preventDefault(); renderPlus(); };
+  const lim = isPlus ? LIMITS.plus : LIMITS.free;
 
   function refresh() {
     const n = describedness($("#ti").value, $("#sy").value, $("#mo").value);
@@ -510,6 +580,15 @@ function renderUpload() {
     try {
       meta = await probe(f);
       $("#probe").textContent = `${meta.w}×${meta.h} · ${Math.round(meta.seconds)}s · ${(f.size / 1048576).toFixed(1)}MB · filed as ${meta.kind === "short" ? "a Short" : "a video"}`;
+      const tooBig = f.size > lim.mb * 1048576, tooLong = meta.seconds > lim.seconds;
+      if (tooBig || tooLong) {
+        meta = null;
+        $("#probe").className = "hint warn";
+        $("#probe").innerHTML += `<br>That's over the ${tooBig ? lim.mb + "MB" : fmtLen(lim.seconds)} limit.` +
+          (isPlus ? " Trim or compress it first." : ` Trim it, or <a href="#" id="pluslink2">get Plus</a> for ${LIMITS.plus.mb}MB and ${fmtLen(LIMITS.plus.seconds)}.`);
+        const p2 = $("#pluslink2");
+        if (p2) p2.onclick = ev => { ev.preventDefault(); renderPlus(); };
+      }
       refresh();
     } catch { $("#probe").className = "hint warn"; $("#probe").textContent = "That file couldn't be read as video."; }
   };
@@ -547,7 +626,15 @@ function renderUpload() {
         owner: session.user.id, title, synopsis: $("#sy").value.trim(),
         moments, kind: meta.kind, path, thumb, seconds: Math.round(meta.seconds)
       }).select("id").single();
-      if (error) throw error;
+      if (error) {
+        // the file made it to storage but the row was refused — clean both up
+        await sb.storage.from("videos").remove([path]);
+        if (thumb) await sb.storage.from("thumbs").remove([thumb]);
+        if (/row-level security/i.test(error.message || "")) {
+          throw new Error(`That video is over the ${lim.mb}MB / ${fmtLen(lim.seconds)} limit${isPlus ? "" : " for free channels"}`);
+        }
+        throw error;
+      }
       $("#bar").firstElementChild.style.width = "100%";
       view.tab = meta.kind;
       renderWatch(data.id);
@@ -559,6 +646,79 @@ function renderUpload() {
       $("#go").disabled = false;
     }
   };
+}
+
+/* ---------- Plus ---------- */
+function renderPlus(state) {
+  view = { name: "plus", tab: view.tab };
+  const note = state === "success"
+    ? (isPlus ? `<div class="posted">Payment received. Plus is on — thanks for backing Unsaid.</div>`
+              : `<div class="posted">Payment received. Plus can take a minute to switch on — refresh shortly.</div>`)
+    : state === "cancel" ? `<div class="hint" style="margin-bottom:12px">Checkout cancelled. Nothing was charged.</div>` : "";
+
+  root.innerHTML = `<div class="wrap"><div class="panel" style="margin-top:2vh">
+    ${note}
+    <h1>Unsaid Plus.</h1>
+    <p>${isPlus ? "You have Plus. Here's what it includes." : `For people who post here a lot. ${PLUS_PRICE}.`}</p>
+    <ul class="perks">
+      <li><span class="n">01</span><span><b>Bigger uploads.</b> Up to ${LIMITS.plus.mb}MB and ${fmtLen(LIMITS.plus.seconds)} per video, instead of ${LIMITS.free.mb}MB and ${fmtLen(LIMITS.free.seconds)}.</span></li>
+      <li><span class="n">02</span><span><b>Channel stats.</b> Views, likes and comments for every video you've posted, in one place.</span></li>
+      <li><span class="n">03</span><span><b>A supporter badge</b> next to your name on your videos and comments.</span></li>
+    </ul>
+    <p class="hint">Plus never changes the comment gate or where anything shows up. Everyone's comments are held to the same rules, and threads stay shuffled.</p>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+      ${isPlus
+        ? `<button class="btn" id="stats">See your stats</button><button class="ghost" id="manage">manage billing</button>`
+        : `<button class="btn" id="buy">Get Plus — ${PLUS_PRICE}</button>`}
+      <button class="ghost" id="back">back</button>
+    </div>
+    <div class="hint" id="err" style="margin-top:10px"></div>
+    ${isPlus ? "" : `<p class="fine">Plus is a subscription. It renews automatically every month at ${PLUS_PRICE} until you cancel. Cancel anytime from “manage billing” — you keep Plus until the end of the period you've paid for. Payments are handled by Stripe. By subscribing you agree to the <a href="terms.html">Terms of Service</a>, including the refund policy.</p>`}
+  </div></div>`;
+
+  const $ = s => root.querySelector(s);
+  $("#back").onclick = renderLibrary;
+  const fail = e => { $("#err").className = "hint warn"; $("#err").textContent = e.message; };
+  if ($("#buy")) $("#buy").onclick = async () => {
+    $("#buy").disabled = true; $("#buy").textContent = "Opening checkout…";
+    try { await billing("checkout"); } catch (e) { fail(e); $("#buy").disabled = false; $("#buy").textContent = `Get Plus — ${PLUS_PRICE}`; }
+  };
+  if ($("#manage")) $("#manage").onclick = async () => { try { await billing("portal"); } catch (e) { fail(e); } };
+  if ($("#stats")) $("#stats").onclick = renderStats;
+}
+
+async function renderStats() {
+  view = { name: "stats", tab: view.tab };
+  root.innerHTML = `<div class="wrap"><div class="loading">LOADING</div></div>`;
+  const { data, error } = await sb.rpc("channel_stats");
+  if (error) {
+    if (/plus_required/.test(error.message || "")) return renderPlus();
+    root.innerHTML = `<div class="wrap"><div class="empty"><div class="k disp">Couldn't load stats.</div><p>${esc(error.message)}</p></div></div>`;
+    return;
+  }
+  const rows = data || [];
+  const sum = k => rows.reduce((a, r) => a + Number(r[k] || 0), 0);
+  root.innerHTML = `<div class="wrap"><div class="panel" style="margin-top:2vh;max-width:760px">
+    <h1>Your channel.</h1>
+    <div class="totals">
+      <div><b>${sum("views")}</b><span>views</span></div>
+      <div><b>${sum("likes")}</b><span>likes</span></div>
+      <div><b>${sum("comments")}</b><span>comments</span></div>
+    </div>
+    ${rows.length ? `<table class="stats">
+      <thead><tr><th>Video</th><th>Views</th><th>Likes</th><th>Comments</th></tr></thead>
+      <tbody>${rows.map(r => `<tr data-id="${r.id}" style="cursor:pointer">
+        <td>${esc(r.title)}${r.kind === "short" ? ` <span class="hint">short</span>` : ""}</td>
+        <td>${r.views}</td><td>${r.likes}</td><td>${r.comments}</td></tr>`).join("")}</tbody>
+    </table>` : `<p class="hint" style="margin-top:18px">Nothing posted yet.</p>`}
+    <div style="margin-top:18px;display:flex;gap:10px">
+      <button class="ghost" id="manage">manage billing</button>
+      <button class="ghost" id="back">back</button>
+    </div>
+  </div></div>`;
+  root.querySelector("#back").onclick = renderLibrary;
+  root.querySelector("#manage").onclick = async () => { try { await billing("portal"); } catch (e) { alert(e.message); } };
+  root.querySelectorAll("tr[data-id]").forEach(tr => tr.onclick = () => renderWatch(tr.dataset.id));
 }
 
 /* read dimensions + grab a frame for the thumbnail */
@@ -640,7 +800,7 @@ async function renderWatchInner(id) {
       </div>
       <h1 class="vt">${esc(v.title)}</h1>
       <div class="vmeta">
-        <span>${esc(v.profiles?.channel || "unknown")}</span>
+        <span>${esc(v.profiles?.channel || "unknown")}${badge(v.owner)}</span>
         <span>${shownViews} view${shownViews === 1 ? "" : "s"}</span>
         <button class="like ${iLike ? "on" : ""}" id="vlike"><span class="pip"></span>${vLikes.length}</button>
         ${v.owner === session.user.id ? `<button class="ghost" id="vdel">delete</button>` : ""}
@@ -822,7 +982,7 @@ async function renderWatchInner(id) {
     $("#list").innerHTML = list.length ? list.map(c => {
       const likes = c.comment_likes || [], mine = c.author === session.user.id, liked = likes.some(l => l.user_id === session.user.id);
       return `<article class="c">
-        <div class="who"><span class="${mine ? "me" : ""}">${esc(c.profiles?.handle || "someone")}</span><span>${ago(c.created_at)}</span>
+        <div class="who"><span class="${mine ? "me" : ""}">${esc(c.profiles?.handle || "someone")}${badge(c.author)}</span><span>${ago(c.created_at)}</span>
         ${mine ? `<button class="del" data-del="${c.id}">delete</button>` : ""}</div>
         <p>${esc(c.body)}</p>
         <div class="prov">
