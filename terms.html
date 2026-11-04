@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terms of Service · Unsaid</title>
+<meta name="description" content="Terms of Service for Unsaid, including paid features, subscriptions and refunds.">
+<style>
+  :root {
+    --bg: #fbfaf8; --fg: #1a1a1a; --muted: #6b6b6b; --line: #e6e3de;
+    --accent: #111; --card: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d0d0d; --fg: #ecebe8; --muted: #9a9a96; --line: #262626; --accent: #fff; --card: #151515; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 48px 20px 96px; }
+  a { color: inherit; text-underline-offset: 3px; }
+  .back { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .back:hover { color: var(--fg); }
+  h1 { font-size: clamp(32px, 7vw, 44px); line-height: 1.1; letter-spacing: -0.02em; margin: 28px 0 8px; }
+  .meta { color: var(--muted); font-size: 14px; margin: 0 0 32px; }
+  .summary {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 20px; margin: 0 0 36px;
+  }
+  .summary h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; border: 0; padding: 0; }
+  .summary ul { margin: 0; padding-left: 18px; }
+  .summary li { margin: 4px 0; }
+  nav ol { columns: 2; column-gap: 28px; padding-left: 20px; margin: 0 0 40px; font-size: 14px; color: var(--muted); }
+  nav li { margin: 3px 0; break-inside: avoid; }
+  nav a { text-decoration: none; }
+  nav a:hover { text-decoration: underline; color: var(--fg); }
+  h2 {
+    font-size: 20px; letter-spacing: -0.01em; margin: 44px 0 10px;
+    padding-top: 20px; border-top: 1px solid var(--line); scroll-margin-top: 16px;
+  }
+  h3 { font-size: 16px; margin: 22px 0 6px; }
+  p, li { color: var(--fg); }
+  ul { padding-left: 20px; }
+  li { margin: 5px 0; }
+  .caps { font-size: 14px; letter-spacing: .01em; }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  @media (max-width: 520px) { nav ol { columns: 1; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← Back to Unsaid</a>
+  <h1>Terms of Service</h1>
+  <p class="meta">Effective November 4, 2026</p>
+
+  <section class="summary" aria-label="Summary">
+    <h2>The short version</h2>
+    <ul>
+      <li>You own what you post. You give us permission to host and show it.</li>
+      <li>Comments are checked by an automated originality filter that can be wrong.</li>
+      <li>Some features cost money. Payments run through Stripe; we never see your full card number.</li>
+      <li>Subscriptions renew automatically until you cancel, which you can do anytime from “Manage billing.”</li>
+      <li>One-time purchases can be refunded within 14 days if the feature doesn’t work as described.</li>
+    </ul>
+    <p class="meta" style="margin:10px 0 0">This summary is for convenience. The full terms below are what apply.</p>
+  </section>
+
+  <nav aria-label="Contents">
+    <ol>
+      <li><a href="#about">About these terms</a></li>
+      <li><a href="#eligibility">Who can use Unsaid</a></li>
+      <li><a href="#accounts">Your account</a></li>
+      <li><a href="#content">Your content</a></li>
+      <li><a href="#rules">Community rules</a></li>
+      <li><a href="#ai">Automated moderation</a></li>
+      <li><a href="#paid">Paid features</a></li>
+      <li><a href="#subscriptions">Subscriptions &amp; auto-renewal</a></li>
+      <li><a href="#refunds">Refunds</a></li>
+      <li><a href="#copyright">Copyright complaints</a></li>
+      <li><a href="#privacy">Privacy</a></li>
+      <li><a href="#termination">Suspension &amp; termination</a></li>
+      <li><a href="#disclaimers">Disclaimers</a></li>
+      <li><a href="#liability">Limitation of liability</a></li>
+      <li><a href="#law">Governing law</a></li>
+      <li><a href="#changes">Changes</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="about">1. About these terms</h2>
+  <p>These Terms of Service (“Terms”) are an agreement between you and Unsaid (“Unsaid,” “we,” “us”), a social video platform operated by an independent developer based in New York, USA. By creating an account, posting, or buying anything on Unsaid, you agree to these Terms. If you don’t agree, don’t use Unsaid.</p>
+
+  <h2 id="eligibility">2. Who can use Unsaid</h2>
+  <ul>
+    <li>You must be at least 13 years old.</li>
+    <li>To buy a paid feature you must be 18 or older, or have permission from a parent or legal guardian who agrees to these Terms on your behalf.</li>
+    <li>You can’t use Unsaid if we’ve previously banned you, or if you’re barred from receiving services under applicable law.</li>
+  </ul>
+
+  <h2 id="accounts">3. Your account</h2>
+  <p>You sign in to Unsaid with your GitHub account. You’re responsible for activity on your Unsaid account and for keeping your GitHub login secure. Tell us right away at the address in <a href="#contact">Contact</a> if you think someone else has accessed your account.</p>
+
+  <h2 id="content">4. Your content</h2>
+  <p>You keep ownership of the videos, comments and other material you post (“Content”). By posting Content, you give Unsaid a worldwide, non-exclusive, royalty-free license to host, store, reproduce, display, distribute and process it (including by automated systems described in section 6) for the purpose of operating, improving and promoting Unsaid. This license ends when you delete the Content, except for copies kept in routine backups for a limited time, or where we need to keep it to comply with law or resolve a dispute.</p>
+  <p>You confirm that you have the rights needed to post your Content and that it doesn’t violate anyone else’s rights or these Terms.</p>
+
+  <h2 id="rules">5. Community rules</h2>
+  <p>Don’t use Unsaid to post or do any of the following:</p>
+  <ul>
+    <li>Anything illegal, or that promotes illegal activity.</li>
+    <li>Sexual content involving minors, in any form. We report it to the authorities.</li>
+    <li>Sexually explicit content, graphic violence, or content glorifying self-harm.</li>
+    <li>Harassment, threats, hate speech, or targeting someone based on a protected characteristic.</li>
+    <li>Someone else’s private information (doxxing) or intimate images shared without consent.</li>
+    <li>Content that infringes copyright, trademark or other rights.</li>
+    <li>Spam, scams, impersonation, or misleading others about who you are.</li>
+    <li>Malware, scraping, attempts to bypass the paywall or the comment filter, or anything that interferes with the service or other users.</li>
+  </ul>
+  <p>We may remove Content or restrict accounts that break these rules. To report something, email us with a link to it.</p>
+
+  <h2 id="ai">6. Automated moderation</h2>
+  <p>Unsaid uses an automated system, which includes a third-party AI model (currently Google Gemini), to judge whether a comment is original before it is posted. Your comment text is sent to that provider for this purpose. The filter can make mistakes, both by blocking comments that should be allowed and by allowing ones that shouldn’t. A blocked comment is not a finding that you did anything wrong. If you think the filter is consistently getting something wrong, let us know.</p>
+
+  <h2 id="paid">7. Paid features</h2>
+  <p>Some features of Unsaid require payment. Each paid feature’s price, what it includes, and whether it is a one-time purchase or a subscription are shown before you pay.</p>
+  <ul>
+    <li><strong>Payment processing.</strong> Payments are processed by Stripe, Inc. under <a href="https://stripe.com/legal/consumer" target="_blank" rel="noopener">Stripe’s terms</a>. Unsaid does not receive or store your full card number.</li>
+    <li><strong>Prices and taxes.</strong> Prices are in U.S. dollars. Applicable sales taxes may be added at checkout.</li>
+    <li><strong>What you’re buying.</strong> A purchase gives you a personal, non-transferable license to use the paid feature on your Unsaid account. It has no cash value and can’t be resold or moved to another account.</li>
+    <li><strong>One-time purchases</strong> stay unlocked for as long as Unsaid offers that feature, subject to sections 9 and 12.</li>
+    <li><strong>Changes to paid features.</strong> We may change or discontinue a paid feature. If we discontinue a feature you paid for in the 90 days before the change, or a subscription you’ve prepaid, we’ll refund the unused portion.</li>
+  </ul>
+
+  <h2 id="subscriptions">8. Subscriptions &amp; auto-renewal</h2>
+  <p class="caps"><strong>Subscriptions renew automatically at the end of each billing period (for example, monthly) and your payment method will be charged the then-current price until you cancel.</strong> The price and billing period are shown at checkout before you subscribe.</p>
+  <ul>
+    <li><strong>How to cancel.</strong> Tap “Manage billing” in Unsaid to cancel online at any time, or email us at the address in <a href="#contact">Contact</a>. Cancellation takes effect at the end of your current billing period, and you keep access until then.</li>
+    <li><strong>Price changes.</strong> We’ll email you at least 30 days before a subscription price increase takes effect, and you can cancel before it applies.</li>
+    <li><strong>Failed payments.</strong> If a renewal payment fails, Stripe may retry it. If it still can’t be collected, the subscription ends and the feature locks.</li>
+    <li><strong>Free trials</strong>, if offered, convert to a paid subscription at the end of the trial unless you cancel before it ends. The trial length and price after the trial are shown at checkout.</li>
+  </ul>
+
+  <h2 id="refunds">9. Refunds</h2>
+  <ul>
+    <li><strong>One-time purchases:</strong> if a feature doesn’t work as described, email us within 14 days of purchase and we’ll fix it or refund you in full.</li>
+    <li><strong>Subscriptions:</strong> you can cancel any time to stop future charges. We don’t give partial refunds for the remainder of a billing period, except where required by law or under section 7. If you forget to cancel and contact us within 7 days of a renewal charge without having used the paid feature since, we’ll refund that renewal.</li>
+    <li>Refunds go back to the original payment method. When a purchase is refunded or reversed through a chargeback, the related feature is removed from your account.</li>
+    <li>Nothing in this section limits any refund rights you have under applicable law.</li>
+  </ul>
+
+  <h2 id="copyright">10. Copyright complaints</h2>
+  <p>If you believe Content on Unsaid infringes your copyright, email us with: your contact information; a description of the copyrighted work; a link to the material you want removed; a statement that you have a good-faith belief the use isn’t authorized; a statement, under penalty of perjury, that your notice is accurate and that you are the owner or authorized to act for the owner; and your physical or electronic signature. We’ll remove infringing material and may terminate accounts of repeat infringers. If your Content was removed and you believe that was a mistake, you can send us a counter-notice.</p>
+
+  <h2 id="privacy">11. Privacy</h2>
+  <p>To run Unsaid we collect and store your GitHub profile basics (such as username, avatar and email), the Content you post, and records of what you’ve purchased. We use service providers to operate the site: Supabase (database and hosting of app data), GitHub (sign-in and site hosting), Google (the comment filter in section 6) and Stripe (payments). We don’t sell your personal information. You can ask us to delete your account and associated data by emailing us. We keep payment records as long as needed for tax and accounting purposes.</p>
+
+  <h2 id="termination">12. Suspension &amp; termination</h2>
+  <p>You can stop using Unsaid and ask us to delete your account at any time. We may suspend or end your access if you break these Terms, if required by law, or to protect Unsaid or other users. If we close your account for a serious or repeated violation of these Terms, you won’t receive a refund for paid features. If we close your account for any other reason, we’ll refund any prepaid subscription time you haven’t used. Sections 4 (the license for backups and legal holds), 9, and 13–15 survive termination.</p>
+
+  <h2 id="disclaimers">13. Disclaimers</h2>
+  <p class="caps">UNSAID IS PROVIDED “AS IS” AND “AS AVAILABLE.” TO THE FULLEST EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. WE DON’T PROMISE THAT UNSAID WILL BE UNINTERRUPTED, ERROR-FREE OR SECURE, OR THAT CONTENT POSTED BY OTHER USERS IS ACCURATE OR APPROPRIATE. OTHER USERS’ CONTENT IS THEIR RESPONSIBILITY, NOT OURS.</p>
+
+  <h2 id="liability">14. Limitation of liability</h2>
+  <p class="caps">TO THE FULLEST EXTENT PERMITTED BY LAW, UNSAID WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, OR FOR LOST PROFITS, DATA OR GOODWILL. OUR TOTAL LIABILITY FOR ANY CLAIM RELATING TO UNSAID IS LIMITED TO THE GREATER OF (A) THE AMOUNT YOU PAID US IN THE 12 MONTHS BEFORE THE CLAIM, OR (B) $50. SOME JURISDICTIONS DON’T ALLOW THESE LIMITS, SO THEY MAY NOT APPLY TO YOU.</p>
+  <p>You agree to cover reasonable losses and legal costs we incur because of Content you post or your violation of these Terms.</p>
+
+  <h2 id="law">15. Governing law</h2>
+  <p>These Terms are governed by the laws of the State of New York, without regard to its conflict-of-laws rules. Before filing a claim, please email us so we can try to resolve it informally. Any dispute that isn’t resolved will be handled in the state or federal courts located in Westchester County, New York, and you and we consent to their jurisdiction. Either of us may bring an eligible claim in small claims court instead.</p>
+
+  <h2 id="changes">16. Changes to these terms</h2>
+  <p>We may update these Terms. We’ll change the date at the top and, for material changes, notify you in the app or by email before they take effect. If you keep using Unsaid after changes take effect, you accept the updated Terms. Changes to prices for existing subscriptions follow section 8.</p>
+
+  <h2 id="contact">17. Contact</h2>
+  <p>Questions, refund requests, reports and copyright notices: <a href="mailto:u9579975@gmail.com">u9579975@gmail.com</a></p>
+
+  <footer>© 2026 Unsaid</footer>
+</main>
+</body>
+</html>
