@@ -1023,7 +1023,7 @@ async function renderWatchInner(id) {
   /* ---------- interactive Shorts + replay layer ---------- */
   const vid = $("#vid"), over = $("#ixover"), res = $("#ixres");
   const mainSrc = pub("videos", v.path);
-  let onMain = true, choseThisPlay = false, skipped = false, plays = 0, lastT = 0, editing = false;
+  let onMain = true, choseThisPlay = false, skipped = false, plays = 0, lastT = 0, editing = false, preview = false;
 
   /* creator: turn Call it / Two endings on for a Short that's already posted */
   if ($("#ixedit")) $("#ixedit").onclick = () => {
@@ -1121,18 +1121,40 @@ async function renderWatchInner(id) {
 
   async function callResults() {
     if (!ixKind || ixKind !== "callit") return;
+    if (preview) {
+      // creator just tried their own Call it: nothing was saved
+      preview = false; myCall = null; skipped = false;
+      res.innerHTML = `<div class="ixres"><div class="big">That's what viewers get.</div>
+        <div class="sub">In the real thing their call is checked against your hidden answer, and they see "You called it." or "Not this time." here, plus everyone else's calls. Preview calls aren't saved.</div>
+        <div class="ixrow" style="margin-top:10px"><button class="ghost" id="pv">preview again</button><button class="ghost" id="pvres">see real calls</button></div></div>`;
+      res.querySelector("#pv").onclick = startPreview;
+      res.querySelector("#pvres").onclick = callResults;
+      return;
+    }
     if (skipped) { res.innerHTML = `<div class="ixres"><div class="sub">You skipped the call. Make one next time to see everyone else's.</div></div>`; return; }
     const { data } = await sb.from("predictions").select("user_id,body,called,created_at").eq("video_id", id);
     const all = data || [], hits = all.filter(p => p.called).length;
     const others = all.filter(p => p.user_id !== me).sort((a, b) => b.called - a.called).slice(0, 25);
     const head = isOwner
-      ? `<div class="big">${all.length} call${all.length === 1 ? "" : "s"} so far</div><div class="sub">${hits} called it · your answer stays hidden from viewers</div>`
+      ? `<div class="big">${all.length} call${all.length === 1 ? "" : "s"} so far</div><div class="sub">${hits} called it · your answer stays hidden from viewers</div>
+         <div class="ixrow" style="margin-top:10px"><button class="ghost" id="pv">preview as a viewer</button></div>`
       : `<div class="big">${myCall.called ? "You called it." : "Not this time."}</div>
          <div class="sub">${hits} of ${all.length} called it</div>
          <div class="mine">${esc(myCall.body)}</div>`;
     res.innerHTML = `<div class="ixres">${head}
       ${others.length ? `<div class="calls">${others.map(p => `<div class="call"><span class="h">${esc(pmap[p.user_id]?.handle || "someone")}</span><span>${esc(p.body)}</span>${p.called ? `<span class="ok">called it</span>` : ""}</div>`).join("")}</div>` : ""}
     </div>`;
+    const pv = res.querySelector("#pv");
+    if (pv) pv.onclick = startPreview;
+  }
+
+  function startPreview() {
+    preview = true; myCall = null; skipped = false; editing = false;
+    res.innerHTML = `<div class="ixres"><div class="sub">PREVIEW — play the Short. It'll stop at ${Number(v.pause_at).toFixed(1)}s and ask for a call, like it does for viewers.</div></div>`;
+    hideOver();
+    vid.currentTime = 0; lastT = 0;
+    vid.play().catch(() => {});
+    vid.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   async function splitResults() {
@@ -1169,6 +1191,13 @@ async function renderWatchInner(id) {
       if (!guess) { msg.className = "hint warn"; msg.textContent = "Type your call first."; return; }
       if (gPasted / guess.length > .35) { msg.className = "hint warn"; msg.textContent = "Type it here — pasted calls don't count."; return; }
       lock.disabled = true; lock.textContent = "Checking…"; msg.textContent = "";
+      if (preview) {
+        myCall = { body: guess, called: null };
+        hideOver();
+        res.innerHTML = `<div class="ixres"><div class="sub">PREVIEW — call locked in (not saved). Watch how it ends…</div></div>`;
+        vid.play();
+        return;
+      }
       try {
         const r = await fetch(`${SUPABASE_URL}/functions/v1/callit`, {
           method: "POST",
@@ -1245,7 +1274,7 @@ async function renderWatchInner(id) {
     const t = vid.currentTime;
     if (wrapped(t)) { plays++; choseThisPlay = false; }
     if (!editing && onMain && ixKind && v.pause_at && t >= v.pause_at && lastT < v.pause_at + 0.6) {
-      if (ixKind === "callit" && !isOwner && !myCall && !skipped) askCall();
+      if (ixKind === "callit" && (!isOwner || preview) && !myCall && !skipped) askCall();
       if (ixKind === "endings" && !choseThisPlay) askEnding();
     }
     if (t >= lastT) replayBubbles(lastT, t);
@@ -1255,7 +1284,7 @@ async function renderWatchInner(id) {
     // looping fires a seek back to 0, so count the replay here before lastT resets
     if (vid.loop && wrapped(vid.currentTime)) { plays++; choseThisPlay = false; }
     // no skipping past the pause point before you've called it
-    if (!editing && ixKind === "callit" && !isOwner && !myCall && !skipped && vid.currentTime > v.pause_at) {
+    if (!editing && ixKind === "callit" && (!isOwner || preview) && !myCall && !skipped && vid.currentTime > v.pause_at) {
       vid.currentTime = Math.max(0, v.pause_at - 0.05);
       askCall();
     }
