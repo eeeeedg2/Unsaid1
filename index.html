@@ -161,6 +161,39 @@ footer b{color:var(--ink);font-weight:400}
 .totals div{border:1.5px solid var(--ink);padding:12px}
 .totals b{display:block;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;letter-spacing:-.03em}
 .totals span{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+/* interactive shorts */
+.ixopts{display:flex;gap:6px;flex-wrap:wrap}
+.ixo{background:none;border:1.5px solid var(--line);color:var(--dim);font-family:'Space Mono',monospace;font-size:11px;padding:8px 12px;cursor:pointer}
+.ixo.on{border-color:var(--ink);color:var(--ink);background:#F5F3ED}
+#ixprev{width:100%;max-height:46vh;background:#000;border:1.5px solid var(--ink);margin-top:10px;display:block}
+.ixrow{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.ixover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,12,.74);padding:16px;z-index:3}
+.ixcard{background:var(--paper);border:1.5px solid var(--ink);padding:16px;width:100%;max-width:340px}
+.ixcard .k{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.03em;line-height:1}
+.ixcard p{margin:6px 0 10px;color:#33363B;font-size:15.5px}
+.ixcard textarea{width:100%;border:1.5px solid var(--line);background:#F5F3ED;padding:10px;font-family:'Newsreader',serif;font-size:16px;min-height:76px;resize:none;color:var(--ink)}
+.ixcard textarea:focus{outline:0;border-color:var(--blue)}
+.ixcard .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ixcard .row .btn{flex:1}
+.replay{position:absolute;left:10px;right:10px;bottom:58px;display:flex;flex-direction:column;gap:6px;pointer-events:none;z-index:2}
+.bub{align-self:flex-start;max-width:88%;background:rgba(22,24,27,.84);color:#fff;font-size:14.5px;line-height:1.35;padding:6px 10px;animation:bubin .25s ease both}
+.bub b{font-family:'Space Mono',monospace;font-weight:400;font-size:10.5px;color:#F7B2AC;margin-right:6px}
+@keyframes bubin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.chip{position:absolute;top:10px;left:10px;z-index:2;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);color:#fff;padding:3px 7px;pointer-events:none}
+.ixres{border:1.5px solid var(--ink);padding:14px 16px;margin-top:14px}
+.ixres .big{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.03em}
+.ixres .sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--dim);margin-top:4px}
+.ixres .mine{margin-top:10px;padding-left:10px;border-left:3px solid var(--red);font-style:italic}
+.calls{margin-top:12px}
+.call{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.call .h{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--dim);min-width:72px;padding-top:3px}
+.call .ok{color:var(--green);font-family:'Space Mono',monospace;font-size:11px;margin-left:auto;padding-top:3px;white-space:nowrap}
+.split{margin-top:10px}
+.split .bar{height:10px;background:var(--wash);margin:4px 0 10px;position:relative}
+.split .bar i{position:absolute;inset:0 auto 0 0;background:var(--red)}
+.split .lbl{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:11px}
+.locked{border:1.5px dashed var(--line);padding:16px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--dim);margin-top:14px}
+.ixtag{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-right:6px}
 </style>
 </head>
 <body>
@@ -521,7 +554,7 @@ function cardHTML(v) {
   const likes = v.video_likes?.[0]?.count || 0;
   return `<button class="card" data-id="${v.id}">
     <span class="th" style="background-image:url('${esc(pub("thumbs", v.thumb))}')"></span>
-    <span class="ti">${esc(v.title)}</span>
+    <span class="ti">${v.interactive === "callit" ? `<span class="ixtag">call it</span>` : v.interactive === "endings" ? `<span class="ixtag">2 endings</span>` : ""}${esc(v.title)}</span>
     <span class="me">${esc(v.profiles?.channel || "unknown")}${badge(v.owner)} · ${v.views} view${v.views === 1 ? "" : "s"} · ${likes} like${likes === 1 ? "" : "s"} · ${ago(v.created_at)}</span>
   </button>`;
 }
@@ -544,6 +577,30 @@ function renderUpload() {
     <div class="meter" id="detail"><i></i><span></span></div>
     <label class="lab" for="mo">Moments, one per line, as "2:31 what happens" (optional)</label>
     <textarea class="in" id="mo" rows="3"></textarea>
+    <div id="ix" class="hide">
+      <label class="lab">Make this Short interactive</label>
+      <div class="ixopts">
+        <button type="button" class="ixo on" data-ix="">off</button>
+        <button type="button" class="ixo" data-ix="callit">call it</button>
+        <button type="button" class="ixo" data-ix="endings">two endings${isPlus ? "" : " · plus"}</button>
+      </div>
+      <div class="hint" id="ixwhat" style="margin-top:8px"></div>
+      <div id="ixbody" class="hide">
+        <video id="ixprev" playsinline muted controls></video>
+        <div class="ixrow"><button type="button" class="ghost" id="ixset">pause here</button><span class="hint" id="ixat">scrub to the moment right before the payoff, then tap “pause here”</span></div>
+        <div id="ixcall" class="hide">
+          <label class="lab" for="ixans">What actually happens next — hidden from viewers</label>
+          <textarea class="in" id="ixans" rows="2" maxlength="500" placeholder="Used only to check who called it. Nobody sees this."></textarea>
+        </div>
+        <div id="ixend" class="hide">
+          <label class="lab" for="ixa">Ending A — the rest of this video</label>
+          <input class="in" id="ixa" maxlength="40" placeholder="e.g. he jumps">
+          <label class="lab" for="ixb">Ending B — a separate clip</label>
+          <input class="in" id="ixb" maxlength="40" placeholder="e.g. he bails">
+          <input class="in" type="file" id="ixfile" accept="video/*" style="margin-top:8px">
+        </div>
+      </div>
+    </div>
     <div class="bar hide" id="bar"><i></i></div>
     <div class="hint" id="err" style="margin-top:10px"></div>
     <div style="margin-top:18px;display:flex;gap:10px">
@@ -569,8 +626,62 @@ function renderUpload() {
     txt.textContent = n >= DETAIL_MIN
       ? "enough for the gate to hold comments to this video"
       : `${n} of ${DETAIL_MIN} distinct words — below this the gate can't tell a specific comment from a generic one`;
-    $("#go").disabled = !(meta && $("#ti").value.trim() && n >= DETAIL_MIN);
+    $("#go").disabled = !(meta && $("#ti").value.trim() && n >= DETAIL_MIN && ixReady());
   }
+
+  /* interactive Shorts */
+  let ix = "", pauseAt = null, altMeta = null, ixAvailable = null;
+  const IX_WHAT = {
+    "": "",
+    callit: "The Short pauses right before the payoff. Viewers have to type what they think happens before they can watch the ending, then see who called it.",
+    endings: "The Short pauses at a decision point and viewers pick which ending to watch, then see how everyone split.",
+  };
+  function ixReady() {
+    if (!ix) return true;
+    if (!pauseAt) return false;
+    if (ix === "callit") return $("#ixans").value.trim().length > 2;
+    return $("#ixa").value.trim() && $("#ixb").value.trim() && !!altMeta;
+  }
+  function setIx(next) {
+    if (next === "endings" && !isPlus) {
+      $("#ixwhat").innerHTML = `Two endings is part of Plus. <a href="#" id="pluslink3">See Plus</a>`;
+      $("#pluslink3").onclick = e => { e.preventDefault(); renderPlus(); };
+      return;
+    }
+    ix = next;
+    root.querySelectorAll(".ixo").forEach(b => b.classList.toggle("on", b.dataset.ix === ix));
+    $("#ixwhat").textContent = IX_WHAT[ix];
+    $("#ixbody").classList.toggle("hide", !ix);
+    $("#ixcall").classList.toggle("hide", ix !== "callit");
+    $("#ixend").classList.toggle("hide", ix !== "endings");
+    refresh();
+  }
+  root.querySelectorAll(".ixo").forEach(b => b.onclick = () => setIx(b.dataset.ix));
+  $("#ixset").onclick = () => {
+    const t = $("#ixprev").currentTime;
+    if (!t || t < 0.5) { $("#ixat").className = "hint warn"; $("#ixat").textContent = "scrub forward to the moment first"; return; }
+    if (meta && t > meta.seconds - 0.5) { $("#ixat").className = "hint warn"; $("#ixat").textContent = "pick a moment before the very end"; return; }
+    pauseAt = Math.round(t * 10) / 10;
+    $("#ixprev").pause();
+    $("#ixat").className = "hint";
+    $("#ixat").textContent = `pauses at ${pauseAt.toFixed(1)}s ✓`;
+    refresh();
+  };
+  ["#ixans", "#ixa", "#ixb"].forEach(sel => $(sel).addEventListener("input", refresh));
+  $("#ixfile").onchange = async e => {
+    const f = e.target.files[0]; altMeta = null;
+    if (f) {
+      try {
+        const m = await probe(f);
+        if (f.size > lim.mb * 1048576 || m.seconds > lim.seconds) {
+          $("#ixwhat").className = "hint warn";
+          $("#ixwhat").textContent = `Ending B is over the ${lim.mb}MB / ${fmtLen(lim.seconds)} limit.`;
+        } else { altMeta = m; $("#ixwhat").className = "hint"; $("#ixwhat").textContent = IX_WHAT.endings; }
+      } catch { $("#ixwhat").className = "hint warn"; $("#ixwhat").textContent = "Ending B couldn't be read as video."; }
+    }
+    refresh();
+  };
+
   ["#ti", "#sy", "#mo"].forEach(sel => $(sel).addEventListener("input", refresh));
   refresh();
 
@@ -589,6 +700,15 @@ function renderUpload() {
         const p2 = $("#pluslink2");
         if (p2) p2.onclick = ev => { ev.preventDefault(); renderPlus(); };
       }
+      // interactive options are for Shorts only, and need the interactive columns in the database
+      if (ixAvailable === null) ixAvailable = !(await sb.from("videos").select("interactive").limit(1)).error;
+      const isShort = meta?.kind === "short" && ixAvailable;
+      $("#ix").classList.toggle("hide", !isShort);
+      if (isShort) {
+        if ($("#ixprev").src) URL.revokeObjectURL($("#ixprev").src);
+        $("#ixprev").src = URL.createObjectURL(f);
+        pauseAt = null; $("#ixat").className = "hint"; $("#ixat").textContent = "scrub to the moment right before the payoff, then tap “pause here”";
+      } else if (ix) setIx("");
       refresh();
     } catch { $("#probe").className = "hint warn"; $("#probe").textContent = "That file couldn't be read as video."; }
   };
@@ -616,19 +736,41 @@ function renderUpload() {
         const tu = await sb.storage.from("thumbs").upload(t, meta.blob, { contentType: "image/jpeg" });
         if (!tu.error) thumb = t;
       }
+      $("#bar").firstElementChild.style.width = "80%";
+
+      let altPath = null;
+      if (ix === "endings") {
+        const af = $("#ixfile").files[0];
+        altPath = `${base}-b.${(af.name.split(".").pop() || "mp4").toLowerCase()}`;
+        const au = await sb.storage.from("videos").upload(altPath, af, { contentType: af.type });
+        if (au.error) { await sb.storage.from("videos").remove([path]); if (thumb) await sb.storage.from("thumbs").remove([thumb]); throw au.error; }
+      }
       $("#bar").firstElementChild.style.width = "88%";
 
       const moments = $("#mo").value.split("\n").map(l => l.trim()).filter(Boolean)
         .map(l => { const m = l.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s+(.*)$/); return m ? { t: m[1], label: m[2] } : null; })
         .filter(Boolean).slice(0, 8);
 
-      const { data, error } = await sb.from("videos").insert({
+      const row = {
         owner: session.user.id, title, synopsis: $("#sy").value.trim(),
         moments, kind: meta.kind, path, thumb, seconds: Math.round(meta.seconds)
-      }).select("id").single();
+      };
+      if (ix) Object.assign(row, { interactive: ix, pause_at: pauseAt });
+      if (ix === "endings") Object.assign(row, { alt_path: altPath, ending_a: $("#ixa").value.trim(), ending_b: $("#ixb").value.trim() });
+
+      const { data, error } = await sb.from("videos").insert(row).select("id").single();
+      if (!error && ix === "callit") {
+        const sec = await sb.from("video_secrets").insert({ video_id: data.id, answer: $("#ixans").value.trim() });
+        if (sec.error) {
+          await sb.from("videos").delete().eq("id", data.id);
+          await sb.storage.from("videos").remove([path]);
+          if (thumb) await sb.storage.from("thumbs").remove([thumb]);
+          throw new Error("Couldn't save the hidden answer");
+        }
+      }
       if (error) {
-        // the file made it to storage but the row was refused — clean both up
-        await sb.storage.from("videos").remove([path]);
+        // the files made it to storage but the row was refused — clean up
+        await sb.storage.from("videos").remove(altPath ? [path, altPath] : [path]);
         if (thumb) await sb.storage.from("thumbs").remove([thumb]);
         if (/row-level security/i.test(error.message || "")) {
           throw new Error(`That video is over the ${lim.mb}MB / ${fmtLen(lim.seconds)} limit${isPlus ? "" : " for free channels"}`);
@@ -661,9 +803,11 @@ function renderPlus(state) {
     <h1>Unsaid Plus.</h1>
     <p>${isPlus ? "You have Plus. Here's what it includes." : `For people who post here a lot. ${PLUS_PRICE}.`}</p>
     <ul class="perks">
-      <li><span class="n">01</span><span><b>Bigger uploads.</b> Up to ${LIMITS.plus.mb}MB and ${fmtLen(LIMITS.plus.seconds)} per video, instead of ${LIMITS.free.mb}MB and ${fmtLen(LIMITS.free.seconds)}.</span></li>
-      <li><span class="n">02</span><span><b>Channel stats.</b> Views, likes and comments for every video you've posted, in one place.</span></li>
-      <li><span class="n">03</span><span><b>A supporter badge</b> next to your name on your videos and comments.</span></li>
+      <li><span class="n">01</span><span><b>Two endings.</b> Give a Short two endings. Viewers pick one at the decision point, then see how everyone split.</span></li>
+      <li><span class="n">02</span><span><b>Replay layer.</b> On a second watch of your Shorts, comments pop up at the exact second people reacted.</span></li>
+      <li><span class="n">03</span><span><b>Bigger uploads.</b> Up to ${LIMITS.plus.mb}MB and ${fmtLen(LIMITS.plus.seconds)} per video, instead of ${LIMITS.free.mb}MB and ${fmtLen(LIMITS.free.seconds)}.</span></li>
+      <li><span class="n">04</span><span><b>Channel stats.</b> Views, likes and comments for every video you've posted, in one place.</span></li>
+      <li><span class="n">05</span><span><b>A supporter badge</b> next to your name on your videos and comments.</span></li>
     </ul>
     <p class="hint">Plus never changes the comment gate or where anything shows up. Everyone's comments are held to the same rules, and threads stay shuffled.</p>
     <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
@@ -787,7 +931,21 @@ async function renderWatchInner(id) {
 
   const cs = (cms.data || []).map(attach);
   let comments = shuffle(cs || []);
-  let sort = "shuffled", anchor = null, typed = 0, pasted = 0, started = null;
+  let sort = "shuffled", anchor = null, typed = 0, pasted = 0, started = null, atSec = null;
+
+  // interactive Shorts state
+  const me = session.user.id, isOwner = v.owner === me;
+  const ixKind = v.kind === "short" && v.pause_at ? v.interactive : null;
+  let myCall = null, myPick = null;
+  if (ixKind === "callit" && !isOwner) {
+    myCall = (await sb.from("predictions").select("body,called").eq("video_id", id).eq("user_id", me).maybeSingle()).data;
+  }
+  if (ixKind === "endings" && !isOwner) {
+    myPick = (await sb.from("ending_picks").select("choice").eq("video_id", id).eq("user_id", me).maybeSingle()).data?.choice || null;
+  }
+  // a Call it thread stays hidden until you've called (it would give the ending away)
+  let threadLocked = ixKind === "callit" && !isOwner && !myCall;
+  const replayOn = v.kind === "short" && plusIds.has(v.owner) && (cs || []).some(c => c.at_seconds != null);
 
   const vLikes = v.video_likes || [];
   const iLike = vLikes.some(l => l.user_id === session.user.id);
@@ -796,8 +954,12 @@ async function renderWatchInner(id) {
     <section>
       <button class="ghost" id="back" style="margin-bottom:16px">← all videos</button>
       <div class="stage ${v.kind === "short" ? "short" : ""}">
-        <video src="${esc(pub("videos", v.path))}" controls playsinline ${v.kind === "short" ? "loop" : ""}></video>
+        <video id="vid" src="${esc(pub("videos", v.path))}" controls playsinline controlslist="nofullscreen" ${v.kind === "short" && !ixKind ? "loop" : ""}></video>
+        <div class="chip hide" id="chip">replay · what people said</div>
+        <div class="replay" id="replay"></div>
+        <div class="ixover hide" id="ixover"></div>
       </div>
+      <div id="ixres"></div>
       <h1 class="vt">${esc(v.title)}</h1>
       <div class="vmeta">
         <span>${esc(v.profiles?.channel || "unknown")}${badge(v.owner)}</span>
@@ -852,9 +1014,177 @@ async function renderWatchInner(id) {
   };
   if ($("#vdel")) $("#vdel").onclick = async () => {
     await sb.from("videos").delete().eq("id", id);
-    await sb.storage.from("videos").remove([v.path]);
+    await sb.storage.from("videos").remove(v.alt_path ? [v.path, v.alt_path] : [v.path]);
+    if (v.thumb) await sb.storage.from("thumbs").remove([v.thumb]);
     renderLibrary();
   };
+
+  /* ---------- interactive Shorts + replay layer ---------- */
+  const vid = $("#vid"), over = $("#ixover"), res = $("#ixres");
+  const mainSrc = pub("videos", v.path);
+  let onMain = true, choseThisPlay = false, skipped = false, plays = 0, lastT = 0;
+
+  function showOver(html) { over.innerHTML = html; over.classList.remove("hide"); }
+  function hideOver() { over.classList.add("hide"); over.innerHTML = ""; }
+
+  async function callResults() {
+    if (!ixKind || ixKind !== "callit") return;
+    if (skipped) { res.innerHTML = `<div class="ixres"><div class="sub">You skipped the call. Make one next time to see everyone else's.</div></div>`; return; }
+    const { data } = await sb.from("predictions").select("user_id,body,called,created_at").eq("video_id", id);
+    const all = data || [], hits = all.filter(p => p.called).length;
+    const others = all.filter(p => p.user_id !== me).sort((a, b) => b.called - a.called).slice(0, 25);
+    const head = isOwner
+      ? `<div class="big">${all.length} call${all.length === 1 ? "" : "s"} so far</div><div class="sub">${hits} called it · your answer stays hidden from viewers</div>`
+      : `<div class="big">${myCall.called ? "You called it." : "Not this time."}</div>
+         <div class="sub">${hits} of ${all.length} called it</div>
+         <div class="mine">${esc(myCall.body)}</div>`;
+    res.innerHTML = `<div class="ixres">${head}
+      ${others.length ? `<div class="calls">${others.map(p => `<div class="call"><span class="h">${esc(pmap[p.user_id]?.handle || "someone")}</span><span>${esc(p.body)}</span>${p.called ? `<span class="ok">called it</span>` : ""}</div>`).join("")}</div>` : ""}
+    </div>`;
+  }
+
+  async function splitResults() {
+    if (ixKind !== "endings" || (!myPick && !isOwner)) return;
+    const { data } = await sb.from("ending_picks").select("choice").eq("video_id", id);
+    const all = data || [], a = all.filter(p => p.choice === "a").length, n = all.length;
+    const pa = n ? Math.round((a / n) * 100) : 0;
+    res.innerHTML = `<div class="ixres">
+      <div class="big">${isOwner ? `${n} pick${n === 1 ? "" : "s"} so far` : `You picked ${esc(myPick === "a" ? v.ending_a : v.ending_b)}.`}</div>
+      <div class="split">
+        <div class="lbl"><span>${esc(v.ending_a)}</span><span>${pa}%</span></div><div class="bar"><i style="width:${pa}%"></i></div>
+        <div class="lbl"><span>${esc(v.ending_b)}</span><span>${n ? 100 - pa : 0}%</span></div><div class="bar"><i style="width:${n ? 100 - pa : 0}%"></i></div>
+      </div>
+      <div class="sub">${n} viewer${n === 1 ? "" : "s"} chose · you can watch either ending any time</div>
+    </div>`;
+  }
+
+  function askCall() {
+    vid.pause();
+    let gTyped = 0, gPasted = 0;
+    showOver(`<div class="ixcard">
+      <div class="k">Call it.</div>
+      <p>What happens next? Commit before you see it.</p>
+      <textarea id="guess" maxlength="300" placeholder="Type your call…"></textarea>
+      <div class="row"><button class="btn" id="lock">Lock it in</button><button class="ghost" id="skipcall">just watch</button></div>
+      <div class="hint" id="gmsg" style="margin-top:8px"></div>
+    </div>`);
+    const g = over.querySelector("#guess"), msg = over.querySelector("#gmsg"), lock = over.querySelector("#lock");
+    g.addEventListener("paste", e => { gPasted += ((e.clipboardData || window.clipboardData).getData("text") || "").length; });
+    g.addEventListener("keydown", () => gTyped++);
+    over.querySelector("#skipcall").onclick = () => { skipped = true; hideOver(); vid.play(); };
+    lock.onclick = async () => {
+      const guess = g.value.trim();
+      if (!guess) { msg.className = "hint warn"; msg.textContent = "Type your call first."; return; }
+      if (gPasted / guess.length > .35) { msg.className = "hint warn"; msg.textContent = "Type it here — pasted calls don't count."; return; }
+      lock.disabled = true; lock.textContent = "Checking…"; msg.textContent = "";
+      try {
+        const r = await fetch(`${SUPABASE_URL}/functions/v1/callit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_ANON_KEY },
+          body: JSON.stringify({ video_id: id, guess }),
+        });
+        const j = await r.json();
+        if (j.error) throw new Error(j.error);
+        if (!j.ok) { msg.className = "hint warn"; msg.textContent = j.reason; lock.disabled = false; lock.textContent = "Lock it in"; return; }
+        myCall = { body: j.body, called: j.called };
+        threadLocked = false; paint();
+        hideOver();
+        res.innerHTML = `<div class="ixres"><div class="sub">Call locked in. Watch how it ends…</div></div>`;
+        vid.play();
+      } catch (e) {
+        msg.className = "hint warn"; msg.textContent = e.message || "Couldn't check your call.";
+        lock.disabled = false; lock.textContent = "Lock it in";
+      }
+    };
+    setTimeout(() => g.focus(), 50);
+  }
+
+  async function askEnding() {
+    vid.pause();
+    let tag = { a: "", b: "" };
+    if (myPick || isOwner) {
+      const { data } = await sb.from("ending_picks").select("choice").eq("video_id", id);
+      const all = data || [], a = all.filter(p => p.choice === "a").length;
+      if (all.length) { const pa = Math.round((a / all.length) * 100); tag = { a: ` · ${pa}%`, b: ` · ${100 - pa}%` }; }
+    }
+    showOver(`<div class="ixcard">
+      <div class="k">Pick the ending.</div>
+      <p>${myPick || isOwner ? "Watch either one." : "Choose one — then see how everyone else split."}</p>
+      <div class="row"><button class="btn" data-end="a">${esc(v.ending_a)}${tag.a}</button><button class="btn" data-end="b">${esc(v.ending_b)}${tag.b}</button></div>
+    </div>`);
+    over.querySelectorAll("[data-end]").forEach(b => b.onclick = async () => {
+      const choice = b.dataset.end;
+      if (!myPick && !isOwner) {
+        await sb.from("ending_picks").insert({ video_id: id, user_id: me, choice });
+        myPick = choice;
+      }
+      hideOver();
+      choseThisPlay = true;
+      if (choice === "b") {
+        onMain = false;
+        $("#replay").innerHTML = ""; $("#chip").classList.add("hide");
+        vid.src = pub("videos", v.alt_path);
+        vid.play();
+      } else {
+        vid.play();
+      }
+      splitResults();
+    });
+  }
+
+  function replayBubbles(from, to) {
+    if (!replayOn || plays < 1 || !onMain) return;
+    $("#chip").classList.remove("hide");
+    comments.filter(c => c.at_seconds != null && c.at_seconds > from && c.at_seconds <= to).forEach(c => {
+      const box = $("#replay");
+      while (box.children.length >= 3) box.firstElementChild.remove();
+      const el = document.createElement("div");
+      el.className = "bub";
+      const body = c.body.length > 110 ? c.body.slice(0, 107) + "…" : c.body;
+      el.innerHTML = `<b>${esc(c.profiles?.handle || "someone")}</b>${esc(body)}`;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    });
+  }
+
+  // a looping Short jumped from the end back to the start: that's a replay
+  const wrapped = t => lastT > 1 && t < 0.6 && lastT > (vid.duration || 0) - 1.2;
+  vid.addEventListener("timeupdate", () => {
+    const t = vid.currentTime;
+    if (wrapped(t)) { plays++; choseThisPlay = false; }
+    if (onMain && ixKind && v.pause_at && t >= v.pause_at && lastT < v.pause_at + 0.6) {
+      if (ixKind === "callit" && !isOwner && !myCall && !skipped) askCall();
+      if (ixKind === "endings" && !choseThisPlay) askEnding();
+    }
+    if (t >= lastT) replayBubbles(lastT, t);
+    lastT = t;
+  });
+  vid.addEventListener("seeking", () => {
+    // looping fires a seek back to 0, so count the replay here before lastT resets
+    if (vid.loop && wrapped(vid.currentTime)) { plays++; choseThisPlay = false; }
+    // no skipping past the pause point before you've called it
+    if (ixKind === "callit" && !isOwner && !myCall && !skipped && vid.currentTime > v.pause_at) {
+      vid.currentTime = Math.max(0, v.pause_at - 0.05);
+      askCall();
+    }
+    lastT = vid.currentTime;
+  });
+  vid.addEventListener("ended", () => {
+    plays++;
+    if (ixKind === "callit" && (myCall || skipped)) callResults();
+    if (ixKind === "endings") splitResults();
+    if (!onMain) { onMain = true; vid.src = mainSrc; }
+    choseThisPlay = false; lastT = 0;
+  });
+
+  if (ixKind === "callit") {
+    if (isOwner || myCall) callResults();
+    else res.innerHTML = `<div class="ixres"><div class="sub">CALL IT — this Short stops right before the payoff. You'll have to call what happens before you see it.</div></div>`;
+  }
+  if (ixKind === "endings") {
+    if (isOwner || myPick) splitResults();
+    else res.innerHTML = `<div class="ixres"><div class="sub">TWO ENDINGS — at the decision point you pick which ending to watch.</div></div>`;
+  }
 
   root.querySelectorAll(".mom").forEach(b => b.onclick = () => {
     anchor = anchor === b.dataset.t ? null : b.dataset.t;
@@ -877,7 +1207,12 @@ async function renderWatchInner(id) {
   ta.addEventListener("paste", e => { pasted += ((e.clipboardData || window.clipboardData).getData("text") || "").length; });
   ta.addEventListener("keydown", e => { if (e.key.length === 1 || e.key === "Backspace" || e.key === "Enter") typed++; });
   ta.addEventListener("input", () => {
-    if (started === null && ta.value.length) started = Date.now();
+    if (started === null && ta.value.length) {
+      started = Date.now();
+      // remember where in the video they were when they started reacting (replay layer)
+      const vt = root.querySelector("#vid");
+      atSec = vt && vt.currentTime > 0.2 && onMain ? Math.round(vt.currentTime * 10) / 10 : null;
+    }
     const words = ta.value.trim().split(/\s+/).filter(Boolean).length;
     const ratio = ta.value.length ? pasted / ta.value.length : 0;
     const h = $("#ghint");
@@ -954,15 +1289,22 @@ async function renderWatchInner(id) {
       }
 
       setChecks({ script: "ok", machine: "ok", dupe: "ok", subject: "ok" });
-      const { data: inserted, error } = await sb.from("comments").insert({
+      const crow = {
         video_id: id, author: session.user.id, body: draft,
         anchor: j.anchor || anchor, typed_here: true, keystrokes: typed,
-        seconds: started ? Math.max(1, Math.round((Date.now() - started) / 1000)) : 0
-      }).select("*").single();
+        seconds: started ? Math.max(1, Math.round((Date.now() - started) / 1000)) : 0,
+        at_seconds: atSec
+      };
+      let { data: inserted, error } = await sb.from("comments").insert(crow).select("*").single();
+      if (error && /at_seconds/.test(error.message || "")) {
+        // database not updated for the replay layer yet: post without the timestamp
+        delete crow.at_seconds;
+        ({ data: inserted, error } = await sb.from("comments").insert(crow).select("*").single());
+      }
       if (error) throw error;
       const row = { ...inserted, profiles: { handle: profile.handle, channel: profile.channel }, comment_likes: [] };
       comments = [row, ...comments];
-      ta.value = ""; typed = pasted = 0; started = null; anchor = null;
+      ta.value = ""; typed = pasted = 0; started = null; anchor = null; atSec = null;
       ta.dispatchEvent(new Event("input"));
       $("#abar").classList.add("hide");
       $("#verdict").innerHTML = `<div class="posted">Posted. It's yours and it's the only one like it here.</div>`;
@@ -979,6 +1321,10 @@ async function renderWatchInner(id) {
     if (sort === "newest") list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     if (sort === "liked") list.sort((a, b) => (b.comment_likes?.length || 0) - (a.comment_likes?.length || 0));
     $("#ccount").textContent = `${comments.length} comment${comments.length === 1 ? "" : "s"}`;
+    if (threadLocked) {
+      $("#list").innerHTML = `<div class="locked">The thread opens after you call it — no spoilers.</div>`;
+      return;
+    }
     $("#list").innerHTML = list.length ? list.map(c => {
       const likes = c.comment_likes || [], mine = c.author === session.user.id, liked = likes.some(l => l.user_id === session.user.id);
       return `<article class="c">
